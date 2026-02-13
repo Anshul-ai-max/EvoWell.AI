@@ -1,79 +1,43 @@
-# EvoWell AI — Personal Fitness Platform
 
-## Overview
 
-A clean, minimal AI-powered fitness platform that acts as a personal trainer — generating personalized workout and diet plans, tracking progress comprehensively, analyzing exercise form via video uploads, and providing an always-available AI chatbot for fitness questions.
+# Fix: Make Plans Actually Display & Add Regeneration
 
----
+## The Problem
+Two issues are causing "false information":
+1. **Old cached plans in localStorage** from before the prompt was improved -- you need to re-run onboarding to get new plans
+2. **The Dashboard page shows hardcoded sample data** -- it doesn't read from localStorage at all, so even after regeneration it shows fake stats
 
-## Pages & Features
+## What Will Change
 
-### 1. Onboarding Questionnaire
+### 1. Dashboard reads real data from localStorage
+- Show your actual weight from onboarding data
+- Show today's workout from the AI-generated plan (matching the current day of the week)
+- Show today's calories from the AI-generated diet plan
+- Remove all hardcoded placeholder values
 
-- Multi-step form collecting: fitness goals (lose weight, build muscle, etc.), current fitness level, age/height/weight, dietary preferences & restrictions, injuries/ medical issues or limitations, workout frequency preference
-- After submission, AI generates an initial personalized workout plan and diet plan
+### 2. Add a "Regenerate Plan" button
+- Add a button on the Dashboard so you can regenerate your workout and diet plans without redoing the full onboarding
+- This calls the same AI backend with your saved onboarding preferences
 
-### 2. Dashboard (Home)
+### 3. Auto-redirect returning users
+- If you've already completed onboarding (`evowell_onboarded` flag in localStorage), skip onboarding and go straight to dashboard
+- If not onboarded, redirect to onboarding
 
-- Overview of today's workout and meals
-- Quick stats: current weight, streak, upcoming plan adjustments
-- Progress summary with mini charts
-- Quick access to AI chatbot
+### 4. Clear old cache on new generation
+- Each time a new plan is generated, the old cached plan is fully replaced
 
-### 3. Workout Plan
+## Technical Details
 
-- Weekly workout schedule with daily exercises
-- Each exercise shows: name, sets, reps, rest time, and text-based form tips
-- Mark exercises as completed with logging (sets, reps, weight used)
-- AI-powered plan rescheduling — after a set period or user request, the AI adjusts the plan based on logged progress
+**Files to modify:**
+- `src/pages/Dashboard.tsx` -- read workout/diet/onboarding data from localStorage, display real values for today's workout, meals, weight, and calories
+- `src/App.tsx` -- add logic to check `evowell_onboarded` flag and redirect accordingly (skip onboarding if already done)
+- `src/pages/Dashboard.tsx` -- add a "Regenerate Plan" button that calls the `generate-plan` edge function with saved onboarding data
 
-### 4. Diet Plan
+**No backend changes needed** -- the edge function prompt is already updated and deployed.
 
-- Daily meal plan with breakfast, lunch, dinner, and snacks, if applicable 5-6 meals
-- Calorie and macro breakdown per meal and daily totals
-- AI adjusts diet based on progress and goals
-
-### 5. Progress Tracking
-
-- **Weight & Measurements**: Log and chart body weight, waist, chest, arms, etc. over time
-- **Workout Logs**: History of all workouts with strength progression charts (e.g., bench press over weeks)
-- **Progress Photos**: Upload and compare photos side-by-side across dates
-- Visual charts and graphs showing trends
-
-### 6. Exercise Form Feedback
-
-- Users upload short video clips of their exercises
-- AI analyzes the video and provides detailed text feedback on form: what's correct, what needs improvement, and specific cues to fix issues
-- History of past form checks with feedback
-
-### 7. AI Chatbot
-
-- Persistent chat interface accessible from any page
-- Users can ask any fitness, nutrition, or health question
-- Context-aware — the bot knows the user's plan, goals, and progress
-- Streaming responses for a smooth conversational experience
-
-### 8. Profile & Settings
-
-- Edit personal info and preferences
-- Update goals and fitness level
-- View and manage account
-
----
-
-## Backend & AI
-
-- **Lovable Cloud** for backend infrastructure
-- **Lovable AI Gateway** (Gemini) for all AI features: plan generation, plan adjustments, form analysis, and chatbot
-- **Supabase Storage** for progress photos and exercise videos
-- **User accounts** with authentication so all data persists
-
----
-
-## Design
-
-- Clean, minimal light theme
-- Simple typography with clear hierarchy
-- Subtle accent color for actions and progress indicators
-- Mobile-friendly responsive layout
-- Card-based UI for workouts, meals, and progress entries
+## Steps to Verify After Implementation
+1. Navigate to `/onboarding`, fill in your details with "Vegetarian" diet
+2. Submit and wait for the AI to generate your plan
+3. Confirm the Dashboard shows your real weight, today's workout, and today's meals
+4. Check the Workout and Diet pages for correct vegetarian-only content
+5. Use the "Regenerate Plan" button to get a fresh plan without redoing onboarding
