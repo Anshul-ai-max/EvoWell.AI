@@ -27,7 +27,18 @@ serve(async (req) => {
       .map((g: string) => goalLabels[g] || g)
       .join(", ");
 
-    const systemPrompt = `You are an expert personal trainer and nutritionist. Generate a personalized weekly workout plan AND daily diet plan based on the user's profile. Return ONLY valid JSON with this exact structure, no markdown:
+    const systemPrompt = `You are an expert personal trainer and certified nutritionist. Generate a personalized weekly workout plan AND daily diet plan based on the user's profile.
+
+CRITICAL RULES:
+- You MUST strictly follow the user's dietary preferences. If they say "Vegetarian" or "Veg", absolutely NO meat, chicken, fish, eggs, or any non-vegetarian items. Use only plant-based proteins like paneer, tofu, lentils, chickpeas, soy, nuts, seeds, dairy (milk, yogurt, cheese).
+- If they say "Vegan", exclude ALL animal products including dairy and honey.
+- If they say "Keto", keep carbs under 30g per day.
+- Respect ALL food allergies and restrictions without exception.
+- Tailor exercises to the user's fitness level — beginners get simpler movements with lower volume.
+- Account for any injuries or limitations by avoiding exercises that stress those areas.
+- Make calorie and macro targets realistic for the user's age, weight, height, and goals.
+
+Return ONLY valid JSON with this exact structure, no markdown:
 {
   "workout": {
     "days": [
@@ -60,16 +71,22 @@ serve(async (req) => {
     ]
   }
 }
-Include 5-7 workout days (rest days included with no exercises). Include 4-6 meals per day. Make the plan specific to the user's goals and level.`;
+Include 7 workout days (rest days included with focus "Rest Day" and empty exercises array). Include 5-6 meals per day. Every meal item must comply with the dietary preferences.`;
 
-    const userPrompt = `Create a plan for:
+    const dietLabel = onboardingData.dietaryPreferences || "No specific preference";
+    const restrictionsLabel = onboardingData.restrictions || "None";
+    const injuriesLabel = onboardingData.injuries || "None";
+
+    const userPrompt = `Create a complete weekly plan for this person:
 - Goals: ${goals}
 - Fitness Level: ${onboardingData.fitnessLevel}
 - Age: ${onboardingData.age}, Height: ${onboardingData.height}cm, Weight: ${onboardingData.weight}kg
 - Workout Frequency: ${onboardingData.frequency} days/week
-- Dietary Preferences: ${onboardingData.dietaryPreferences || "No preference"}
-- Restrictions: ${onboardingData.restrictions || "None"}
-- Injuries/Limitations: ${onboardingData.injuries || "None"}`;
+- DIETARY PREFERENCE (MUST FOLLOW STRICTLY): ${dietLabel}
+- FOOD ALLERGIES/RESTRICTIONS (MUST FOLLOW STRICTLY): ${restrictionsLabel}
+- Injuries/Limitations (avoid exercises affecting these): ${injuriesLabel}
+
+IMPORTANT: Every single meal item MUST comply with "${dietLabel}" diet. Double-check that no restricted foods appear.`;
 
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
@@ -80,7 +97,7 @@ Include 5-7 workout days (rest days included with no exercises). Include 4-6 mea
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
+          model: "google/gemini-2.5-flash",
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt },
