@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import Onboarding from "@/pages/Onboarding";
 import Dashboard from "@/pages/Dashboard";
@@ -16,6 +16,11 @@ import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
 
+function RootRedirect() {
+  const isOnboarded = localStorage.getItem("evowell_onboarded") === "true";
+  return <Navigate to={isOnboarded ? "/dashboard" : "/onboarding"} replace />;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -23,7 +28,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Navigate to="/onboarding" replace />} />
+          <Route path="/" element={<RootRedirect />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/chat" element={<Chat />} />
           <Route element={<AppLayout />}>
