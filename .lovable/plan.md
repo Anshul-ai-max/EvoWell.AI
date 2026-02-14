@@ -1,43 +1,59 @@
 
 
-# Fix: Make Plans Actually Display & Add Regeneration
+# Fix Dashboard to Show Real Data and Add Plan Regeneration
 
 ## The Problem
-Two issues are causing "false information":
-1. **Old cached plans in localStorage** from before the prompt was improved -- you need to re-run onboarding to get new plans
-2. **The Dashboard page shows hardcoded sample data** -- it doesn't read from localStorage at all, so even after regeneration it shows fake stats
 
-## What Will Change
+The Dashboard page (`src/pages/Dashboard.tsx`) is **100% hardcoded placeholder data**. It shows fake weight ("75 kg"), fake meals ("Grilled chicken", "Salmon"), and fake workout exercises regardless of what you entered during onboarding. The Workout and Diet pages already read from localStorage correctly -- only the Dashboard is broken.
 
-### 1. Dashboard reads real data from localStorage
-- Show your actual weight from onboarding data
-- Show today's workout from the AI-generated plan (matching the current day of the week)
-- Show today's calories from the AI-generated diet plan
-- Remove all hardcoded placeholder values
+## Changes
+
+### 1. Rewrite Dashboard to read real data from localStorage
+
+The Dashboard will pull from three localStorage keys:
+- `evowell_onboarding` -- your profile (weight, goals, etc.)
+- `evowell_workout_plan` -- AI-generated workout (7 days)
+- `evowell_diet_plan` -- AI-generated diet (meals list)
+
+It will:
+- Show your **actual weight** from onboarding data
+- Show **today's workout** by matching the current day of the week to the workout plan
+- Show **today's meals** from the diet plan with real calorie totals
+- Replace all hardcoded values
 
 ### 2. Add a "Regenerate Plan" button
-- Add a button on the Dashboard so you can regenerate your workout and diet plans without redoing the full onboarding
-- This calls the same AI backend with your saved onboarding preferences
+
+A button on the Dashboard that:
+- Calls the same AI backend function with your saved onboarding preferences
+- Shows a loading spinner while generating
+- Replaces old plans in localStorage with the fresh ones
+- No need to redo the onboarding questionnaire
 
 ### 3. Auto-redirect returning users
-- If you've already completed onboarding (`evowell_onboarded` flag in localStorage), skip onboarding and go straight to dashboard
-- If not onboarded, redirect to onboarding
 
-### 4. Clear old cache on new generation
-- Each time a new plan is generated, the old cached plan is fully replaced
+Update the root route in `src/App.tsx`:
+- If `evowell_onboarded` is set in localStorage, redirect `/` to `/dashboard` instead of `/onboarding`
+- If not onboarded, continue redirecting to `/onboarding`
 
 ## Technical Details
 
 **Files to modify:**
-- `src/pages/Dashboard.tsx` -- read workout/diet/onboarding data from localStorage, display real values for today's workout, meals, weight, and calories
-- `src/App.tsx` -- add logic to check `evowell_onboarded` flag and redirect accordingly (skip onboarding if already done)
-- `src/pages/Dashboard.tsx` -- add a "Regenerate Plan" button that calls the `generate-plan` edge function with saved onboarding data
 
-**No backend changes needed** -- the edge function prompt is already updated and deployed.
+1. **`src/pages/Dashboard.tsx`** (major rewrite)
+   - Add `useState` and `useEffect` to load onboarding data, workout plan, and diet plan from localStorage
+   - Determine today's day index to pick the correct workout day
+   - Calculate total daily calories from the diet plan
+   - Add a `regeneratePlan()` function that calls the edge function and updates localStorage
+   - Show empty/fallback state if no plan exists yet
 
-## Steps to Verify After Implementation
-1. Navigate to `/onboarding`, fill in your details with "Vegetarian" diet
-2. Submit and wait for the AI to generate your plan
-3. Confirm the Dashboard shows your real weight, today's workout, and today's meals
-4. Check the Workout and Diet pages for correct vegetarian-only content
-5. Use the "Regenerate Plan" button to get a fresh plan without redoing onboarding
+2. **`src/App.tsx`** (small change)
+   - Replace the hardcoded `<Navigate to="/onboarding">` with a small component that checks `localStorage.getItem("evowell_onboarded")` and redirects accordingly
+
+**No backend changes needed** -- the edge function is already deployed and working correctly.
+
+## After Implementation
+
+1. Clear your browser's localStorage (or go through onboarding again)
+2. Fill in onboarding with your real preferences (e.g., "Vegetarian")
+3. The Dashboard will now show your actual weight, today's real workout, and real meals
+4. Use "Regenerate Plan" anytime to get a fresh plan without redoing onboarding
