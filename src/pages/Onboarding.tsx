@@ -26,6 +26,25 @@ const fitnessLevels = [
   { id: "advanced", label: "Advanced", desc: "Consistent training for 2+ years" },
 ];
 
+const cuisines = [
+  { id: "indian", label: "Indian", emoji: "🇮🇳" },
+  { id: "mediterranean", label: "Mediterranean", emoji: "🫒" },
+  { id: "east_asian", label: "East Asian", emoji: "🥢" },
+  { id: "latin_american", label: "Latin American", emoji: "🌮" },
+  { id: "western", label: "Western / American", emoji: "🍔" },
+  { id: "middle_eastern", label: "Middle Eastern", emoji: "🧆" },
+  { id: "african", label: "African", emoji: "🍲" },
+  { id: "custom", label: "Custom", emoji: "✏️" },
+];
+
+const workoutEnvironments = [
+  { id: "home_none", label: "Home (no equipment)", desc: "Bodyweight exercises only" },
+  { id: "home_basic", label: "Home (basic equipment)", desc: "Dumbbells, resistance bands, pull-up bar" },
+  { id: "gym", label: "Gym (full equipment)", desc: "Full range of machines and free weights" },
+  { id: "outdoor", label: "Outdoor", desc: "Park, running, bodyweight exercises" },
+  { id: "mixed", label: "Mixed", desc: "Combination of home, gym, and outdoor" },
+];
+
 const frequencies = [
   { id: "2-3", label: "2–3 days/week" },
   { id: "3-4", label: "3–4 days/week" },
@@ -34,7 +53,7 @@ const frequencies = [
   { id: "daily", label: "Every day" },
 ];
 
-const STEPS = ["Goals", "Level", "Body", "Diet", "Schedule"];
+const STEPS = ["Goals", "Level", "Body", "Diet", "Cuisine", "Equipment", "Schedule"];
 
 interface FormData {
   goals: string[];
@@ -45,6 +64,9 @@ interface FormData {
   dietaryPreferences: string;
   restrictions: string;
   injuries: string;
+  cuisine: string;
+  customCuisine: string;
+  workoutEnvironment: string;
   frequency: string;
 }
 
@@ -60,6 +82,9 @@ export default function Onboarding() {
     dietaryPreferences: "",
     restrictions: "",
     injuries: "",
+    cuisine: "",
+    customCuisine: "",
+    workoutEnvironment: "",
     frequency: "",
   });
 
@@ -80,7 +105,9 @@ export default function Onboarding() {
       case 1: return !!formData.fitnessLevel;
       case 2: return !!formData.age && !!formData.height && !!formData.weight;
       case 3: return true;
-      case 4: return !!formData.frequency;
+      case 4: return !!formData.cuisine && (formData.cuisine !== "custom" || !!formData.customCuisine);
+      case 5: return !!formData.workoutEnvironment;
+      case 6: return !!formData.frequency;
       default: return false;
     }
   };
@@ -311,6 +338,72 @@ export default function Onboarding() {
                 )}
 
                 {step === 4 && (
+                  <div>
+                    <h2 className="font-display text-xl font-semibold mb-1">What type of cuisine do you prefer?</h2>
+                    <p className="text-sm text-muted-foreground mb-6">We'll use authentic dishes from your culture</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {cuisines.map((c) => {
+                        const selected = formData.cuisine === c.id;
+                        return (
+                          <button
+                            key={c.id}
+                            onClick={() => setFormData((p) => ({ ...p, cuisine: c.id }))}
+                            className={cn(
+                              "flex items-center gap-3 rounded-xl border-2 p-4 text-left text-sm font-medium transition-all",
+                              selected
+                                ? "border-primary bg-accent text-accent-foreground"
+                                : "border-border bg-card hover:border-primary/40"
+                            )}
+                          >
+                            <span className="text-lg">{c.emoji}</span>
+                            <span>{c.label}</span>
+                            {selected && <Check className="ml-auto h-4 w-4 text-primary" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {formData.cuisine === "custom" && (
+                      <div className="mt-4">
+                        <Label htmlFor="customCuisine">Describe your preferred cuisine</Label>
+                        <Input
+                          id="customCuisine"
+                          placeholder="e.g. South Indian, Japanese, Nigerian..."
+                          value={formData.customCuisine}
+                          onChange={(e) => setFormData((p) => ({ ...p, customCuisine: e.target.value }))}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {step === 5 && (
+                  <div>
+                    <h2 className="font-display text-xl font-semibold mb-1">Where will you work out?</h2>
+                    <p className="text-sm text-muted-foreground mb-6">We'll only suggest exercises you can actually do</p>
+                    <div className="flex flex-col gap-3">
+                      {workoutEnvironments.map((env) => {
+                        const selected = formData.workoutEnvironment === env.id;
+                        return (
+                          <button
+                            key={env.id}
+                            onClick={() => setFormData((p) => ({ ...p, workoutEnvironment: env.id }))}
+                            className={cn(
+                              "rounded-xl border-2 p-4 text-left transition-all",
+                              selected
+                                ? "border-primary bg-accent"
+                                : "border-border bg-card hover:border-primary/40"
+                            )}
+                          >
+                            <div className="font-medium text-sm">{env.label}</div>
+                            <div className="text-xs text-muted-foreground mt-0.5">{env.desc}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {step === 6 && (
                   <div>
                     <h2 className="font-display text-xl font-semibold mb-1">How often can you work out?</h2>
                     <p className="text-sm text-muted-foreground mb-6">We'll build your schedule around this</p>

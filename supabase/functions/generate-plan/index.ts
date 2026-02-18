@@ -34,6 +34,25 @@ CRITICAL RULES:
 - If they say "Vegan", exclude ALL animal products including dairy and honey.
 - If they say "Keto", keep carbs under 30g per day.
 - Respect ALL food allergies and restrictions without exception.
+
+CUISINE/CULTURE RULES (CRITICAL):
+- You MUST generate meals that are authentic to the user's preferred cuisine/culture.
+- If cuisine is "Indian", use traditional Indian dishes: poha, upma, idli, dosa, dal-chawal, roti-sabzi, paneer dishes, chole, rajma, paratha, khichdi, raita, lassi, etc. Do NOT use generic Western meals like oatmeal, grilled chicken salad, or protein shakes.
+- If cuisine is "Mediterranean", use dishes like hummus, falafel, tabbouleh, grilled fish, olive oil based dishes, pita, Greek salad, etc.
+- If cuisine is "East Asian", use dishes like miso soup, stir-fry, rice bowls, tofu dishes, noodles, congee, etc.
+- If cuisine is "Latin American", use dishes like beans and rice, tacos, empanadas, ceviche, plantains, etc.
+- If cuisine is "Middle Eastern", use dishes like shawarma, kebab, hummus, falafel, fattoush, labneh, etc.
+- If cuisine is "African", use dishes like jollof rice, injera, stews, fufu, groundnut soup, etc.
+- Every single meal must feel authentic to the chosen cuisine. No generic substitutions.
+
+WORKOUT ENVIRONMENT RULES (CRITICAL):
+- "Home (no equipment)" or "home_none": Use ONLY bodyweight exercises — push-ups, squats, lunges, planks, burpees, mountain climbers, jumping jacks, glute bridges, wall sits, crunches, leg raises, etc. Absolutely NO barbells, dumbbells, cables, or machines.
+- "Home (basic equipment)" or "home_basic": Use bodyweight exercises plus dumbbells, resistance bands, pull-up bar, and kettlebells only. No machines or cable systems.
+- "Gym (full equipment)" or "gym": Use the full range — barbells, dumbbells, machines, cables, benches, racks, etc.
+- "Outdoor" or "outdoor": Use running, sprints, park bench exercises, bodyweight circuits, hill sprints, etc. No gym equipment.
+- "Mixed" or "mixed": Combine home, gym, and outdoor exercises across the week.
+- NEVER suggest equipment the user doesn't have access to.
+
 - Tailor exercises to the user's fitness level — beginners get simpler movements with lower volume.
 - Account for any injuries or limitations by avoiding exercises that stress those areas.
 - Make calorie and macro targets realistic for the user's age, weight, height, and goals.
@@ -47,11 +66,11 @@ Return ONLY valid JSON with this exact structure, no markdown:
         "focus": "Upper Body - Push",
         "exercises": [
           {
-            "name": "Bench Press",
+            "name": "Push-ups",
             "sets": 4,
             "reps": 10,
             "rest": "90s",
-            "tips": "Keep shoulder blades retracted."
+            "tips": "Keep core tight throughout."
           }
         ]
       }
@@ -62,20 +81,25 @@ Return ONLY valid JSON with this exact structure, no markdown:
       {
         "name": "Breakfast",
         "time": "7:30 AM",
-        "items": ["Oatmeal with blueberries", "Protein shake"],
-        "calories": 450,
-        "protein": 35,
+        "items": ["Poha with peanuts", "Chai"],
+        "calories": 350,
+        "protein": 12,
         "carbs": 55,
-        "fat": 10
+        "fat": 8
       }
     ]
   }
 }
-Include 7 workout days (rest days included with focus "Rest Day" and empty exercises array). Include 5-6 meals per day. Every meal item must comply with the dietary preferences.`;
+Include 7 workout days (rest days included with focus "Rest Day" and empty exercises array). Include 5-6 meals per day. Every meal item must comply with the dietary preferences AND cuisine culture.`;
 
     const dietLabel = onboardingData.dietaryPreferences || "No specific preference";
     const restrictionsLabel = onboardingData.restrictions || "None";
     const injuriesLabel = onboardingData.injuries || "None";
+
+    const cuisineLabel = onboardingData.cuisine === "custom"
+      ? (onboardingData.customCuisine || "No specific preference")
+      : (onboardingData.cuisine || "No specific preference");
+    const environmentLabel = onboardingData.workoutEnvironment || "No specific preference";
 
     const userPrompt = `Create a complete weekly plan for this person:
 - Goals: ${goals}
@@ -84,9 +108,11 @@ Include 7 workout days (rest days included with focus "Rest Day" and empty exerc
 - Workout Frequency: ${onboardingData.frequency} days/week
 - DIETARY PREFERENCE (MUST FOLLOW STRICTLY): ${dietLabel}
 - FOOD ALLERGIES/RESTRICTIONS (MUST FOLLOW STRICTLY): ${restrictionsLabel}
+- CUISINE/CULTURE (MUST USE AUTHENTIC DISHES FROM THIS CULTURE): ${cuisineLabel}
+- WORKOUT ENVIRONMENT (ONLY USE EXERCISES POSSIBLE HERE): ${environmentLabel}
 - Injuries/Limitations (avoid exercises affecting these): ${injuriesLabel}
 
-IMPORTANT: Every single meal item MUST comply with "${dietLabel}" diet. Double-check that no restricted foods appear.`;
+IMPORTANT: Every single meal item MUST comply with "${dietLabel}" diet AND use authentic "${cuisineLabel}" cuisine dishes. Every exercise MUST be doable in "${environmentLabel}" environment. Double-check that no restricted foods appear and no unavailable equipment is used.`;
 
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
