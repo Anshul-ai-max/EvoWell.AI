@@ -1,59 +1,70 @@
 
 
-# Fix Dashboard to Show Real Data and Add Plan Regeneration
+# Make EvoWell Feel Like a Real Personal Trainer
 
-## The Problem
+## What's Changing
 
-The Dashboard page (`src/pages/Dashboard.tsx`) is **100% hardcoded placeholder data**. It shows fake weight ("75 kg"), fake meals ("Grilled chicken", "Salmon"), and fake workout exercises regardless of what you entered during onboarding. The Workout and Diet pages already read from localStorage correctly -- only the Dashboard is broken.
+The onboarding questionnaire will be expanded with two new steps to collect **cuisine/culture preference** and **workout environment**, and the AI prompt will use this info to generate truly personalized plans -- Indian meals for Indian users, home-only exercises for people without a gym, etc.
 
-## Changes
+## New Onboarding Steps
 
-### 1. Rewrite Dashboard to read real data from localStorage
+The current 5 steps become 7:
 
-The Dashboard will pull from three localStorage keys:
-- `evowell_onboarding` -- your profile (weight, goals, etc.)
-- `evowell_workout_plan` -- AI-generated workout (7 days)
-- `evowell_diet_plan` -- AI-generated diet (meals list)
+**Goals > Level > Body > Diet > Cuisine > Equipment > Schedule**
 
-It will:
-- Show your **actual weight** from onboarding data
-- Show **today's workout** by matching the current day of the week to the workout plan
-- Show **today's meals** from the diet plan with real calorie totals
-- Replace all hardcoded values
+### Step 5 (NEW): Cuisine / Culture
+Question: "What type of cuisine do you prefer?"
+Options (select one):
+- Indian
+- Mediterranean
+- East Asian
+- Latin American
+- Western / American
+- Middle Eastern
+- African
+- Custom (free text input)
 
-### 2. Add a "Regenerate Plan" button
+### Step 6 (NEW): Workout Environment
+Question: "Where will you work out?"
+Options (select one):
+- Home (no equipment)
+- Home (with basic equipment -- dumbbells, bands)
+- Gym (full equipment)
+- Outdoor (park, running, bodyweight)
+- Mixed (combination)
 
-A button on the Dashboard that:
-- Calls the same AI backend function with your saved onboarding preferences
-- Shows a loading spinner while generating
-- Replaces old plans in localStorage with the fresh ones
-- No need to redo the onboarding questionnaire
+## AI Prompt Improvements
 
-### 3. Auto-redirect returning users
-
-Update the root route in `src/App.tsx`:
-- If `evowell_onboarded` is set in localStorage, redirect `/` to `/dashboard` instead of `/onboarding`
-- If not onboarded, continue redirecting to `/onboarding`
+The backend prompt will be updated to:
+- Use the cuisine/culture to generate **culturally authentic meals** (e.g., dal, roti, sabzi for Indian; hummus, falafel for Middle Eastern)
+- Use the workout environment to **only suggest exercises possible in that setting** (e.g., no barbell squats for "Home - no equipment")
+- Add explicit instructions like: "If cuisine is Indian, use traditional Indian dishes with local ingredients. Do NOT use generic Western meals."
+- For workout environment: "If Home (no equipment), use only bodyweight exercises. If Gym, use full range of machines and free weights."
 
 ## Technical Details
 
 **Files to modify:**
 
-1. **`src/pages/Dashboard.tsx`** (major rewrite)
-   - Add `useState` and `useEffect` to load onboarding data, workout plan, and diet plan from localStorage
-   - Determine today's day index to pick the correct workout day
-   - Calculate total daily calories from the diet plan
-   - Add a `regeneratePlan()` function that calls the edge function and updates localStorage
-   - Show empty/fallback state if no plan exists yet
+1. **`src/pages/Onboarding.tsx`**
+   - Add `cuisine` and `workoutEnvironment` fields to the `FormData` interface
+   - Add two new option arrays: `cuisines` and `workoutEnvironments`
+   - Update `STEPS` from 5 to 7: `["Goals", "Level", "Body", "Diet", "Cuisine", "Equipment", "Schedule"]`
+   - Add two new step renders (step 4 for Cuisine, step 5 for Equipment), shift Schedule to step 6
+   - Update `canProceed()` validation for the new steps
+   - The cuisine step will have predefined buttons plus a text input for "Other"
 
-2. **`src/App.tsx`** (small change)
-   - Replace the hardcoded `<Navigate to="/onboarding">` with a small component that checks `localStorage.getItem("evowell_onboarded")` and redirects accordingly
+2. **`supabase/functions/generate-plan/index.ts`**
+   - Add `onboardingData.cuisine` and `onboardingData.workoutEnvironment` to the user prompt
+   - Update the system prompt with new critical rules:
+     - "Use ONLY dishes and ingredients authentic to the user's cuisine culture"
+     - "ONLY suggest exercises that can be performed in the user's workout environment"
+   - Add environment-specific exercise constraints (e.g., bodyweight-only list for home with no equipment)
 
-**No backend changes needed** -- the edge function is already deployed and working correctly.
+**No database changes needed.**
 
-## After Implementation
+## Result
 
-1. Clear your browser's localStorage (or go through onboarding again)
-2. Fill in onboarding with your real preferences (e.g., "Vegetarian")
-3. The Dashboard will now show your actual weight, today's real workout, and real meals
-4. Use "Regenerate Plan" anytime to get a fresh plan without redoing onboarding
+After these changes, an Indian vegetarian user working out at home will get:
+- **Meals**: Poha, dal-chawal, paneer tikka, chole, idli-sambhar -- not oatmeal and salmon
+- **Workouts**: Push-ups, squats, planks, lunges -- not bench press and cable rows
+
