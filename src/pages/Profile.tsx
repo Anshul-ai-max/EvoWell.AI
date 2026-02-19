@@ -1,9 +1,24 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { User, Settings, LogOut, ChevronRight } from "lucide-react";
+import { User, Settings, LogOut, ChevronRight, RotateCcw } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function Profile() {
+  const navigate = useNavigate();
+  const [showResetDialog, setShowResetDialog] = useState(false);
+
+  const handleReset = () => {
+    const keys = Object.keys(localStorage).filter((k) => k.startsWith("evowell_"));
+    keys.forEach((k) => localStorage.removeItem(k));
+    navigate("/onboarding");
+  };
+
   return (
     <div className="space-y-6">
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
@@ -42,10 +57,36 @@ export default function Profile() {
         ))}
       </div>
 
-      <Button variant="outline" className="w-full gap-2 text-destructive">
-        <LogOut className="h-4 w-4" />
-        Sign Out
-      </Button>
+      <div className="space-y-3">
+        <Button
+          variant="outline"
+          className="w-full gap-2 text-destructive"
+          onClick={() => setShowResetDialog(true)}
+        >
+          <RotateCcw className="h-4 w-4" />
+          Reset Profile & Start Over
+        </Button>
+
+        <Button variant="outline" className="w-full gap-2 text-destructive">
+          <LogOut className="h-4 w-4" />
+          Sign Out
+        </Button>
+      </div>
+
+      <AlertDialog open={showResetDialog} onOpenChange={setShowResetDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset Profile?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will clear all your preferences and plans, and take you back to the onboarding flow. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleReset}>Yes, Reset Everything</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
