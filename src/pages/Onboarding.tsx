@@ -104,7 +104,7 @@ export default function Onboarding() {
       case 0: return formData.goals.length > 0;
       case 1: return !!formData.fitnessLevel;
       case 2: return !!formData.age && !!formData.height && !!formData.weight;
-      case 3: return true;
+      case 3: return !!formData.dietaryPreferences.trim();
       case 4: return !!formData.cuisine && (formData.cuisine !== "custom" || !!formData.customCuisine);
       case 5: return !!formData.workoutEnvironment;
       case 6: return !!formData.frequency;
@@ -312,7 +312,7 @@ export default function Onboarding() {
                 {step === 3 && (
                   <div>
                     <h2 className="font-display text-xl font-semibold mb-1">Dietary preferences</h2>
-                    <p className="text-sm text-muted-foreground mb-6">Optional — helps personalize your diet plan</p>
+                    <p className="text-sm text-muted-foreground mb-6">Required — helps personalize your diet plan</p>
                     <div className="flex flex-col gap-4">
                       <div>
                         <Label htmlFor="dietPref">Diet type</Label>
