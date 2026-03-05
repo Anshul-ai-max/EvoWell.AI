@@ -268,6 +268,34 @@ export default function Onboarding() {
 
                 {step === 2 && (
                   <div>
+                    <h2 className="font-display text-xl font-semibold mb-1">What's your gender?</h2>
+                    <p className="text-sm text-muted-foreground mb-6">Used for accurate calorie calculations</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {genders.map((g) => {
+                        const selected = formData.gender === g.id;
+                        return (
+                          <button
+                            key={g.id}
+                            onClick={() => setFormData((p) => ({ ...p, gender: g.id }))}
+                            className={cn(
+                              "flex items-center gap-3 rounded-xl border-2 p-4 text-left text-sm font-medium transition-all",
+                              selected
+                                ? "border-primary bg-accent text-accent-foreground"
+                                : "border-border bg-card hover:border-primary/40"
+                            )}
+                          >
+                            <span className="text-lg">{g.emoji}</span>
+                            <span>{g.label}</span>
+                            {selected && <Check className="ml-auto h-4 w-4 text-primary" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {step === 3 && (
+                  <div>
                     <h2 className="font-display text-xl font-semibold mb-1">Tell us about yourself</h2>
                     <p className="text-sm text-muted-foreground mb-6">Used to calculate your plan</p>
                     <div className="flex flex-col gap-4">
