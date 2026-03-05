@@ -58,7 +58,19 @@ const genders = [
   { id: "female", label: "Female", emoji: "♀️" },
 ];
 
-const STEPS = ["Goals", "Level", "Gender", "Body", "Diet", "Cuisine", "Equipment", "Schedule"];
+const budgetOptions = [
+  { id: "budget", label: "Budget-friendly", desc: "Affordable, locally available ingredients", emoji: "💰" },
+  { id: "moderate", label: "Moderate", desc: "Balanced cost, some premium items", emoji: "⚖️" },
+  { id: "no_limit", label: "No budget constraints", desc: "Best quality ingredients, no cost concern", emoji: "💎" },
+];
+
+const supplementOptions = [
+  { id: "none", label: "No supplements", desc: "Food-only approach, no powders or pills" },
+  { id: "basic", label: "Basic (protein powder only)", desc: "Whey or plant-based protein to bridge gaps" },
+  { id: "open", label: "Open to supplements", desc: "Protein, creatine, vitamins — whatever helps" },
+];
+
+const STEPS = ["Goals", "Level", "Gender", "Body", "Diet", "Cuisine", "Budget", "Supplements", "Equipment", "Schedule"];
 
 interface FormData {
   goals: string[];
@@ -72,6 +84,9 @@ interface FormData {
   injuries: string;
   cuisine: string;
   customCuisine: string;
+  budget: string;
+  supplementWillingness: string;
+  currentSupplements: string;
   workoutEnvironment: string;
   frequency: string;
 }
@@ -91,6 +106,9 @@ export default function Onboarding() {
     injuries: "",
     cuisine: "",
     customCuisine: "",
+    budget: "",
+    supplementWillingness: "",
+    currentSupplements: "",
     workoutEnvironment: "",
     frequency: "",
   });
@@ -114,8 +132,10 @@ export default function Onboarding() {
       case 3: return !!formData.age && !!formData.height && !!formData.weight;
       case 4: return !!formData.dietaryPreferences.trim();
       case 5: return !!formData.cuisine && (formData.cuisine !== "custom" || !!formData.customCuisine);
-      case 6: return !!formData.workoutEnvironment;
-      case 7: return !!formData.frequency;
+      case 6: return !!formData.budget;
+      case 7: return !!formData.supplementWillingness;
+      case 8: return !!formData.workoutEnvironment;
+      case 9: return !!formData.frequency;
       default: return false;
     }
   };
@@ -414,6 +434,75 @@ export default function Onboarding() {
 
                 {step === 6 && (
                   <div>
+                    <h2 className="font-display text-xl font-semibold mb-1">What's your budget?</h2>
+                    <p className="text-sm text-muted-foreground mb-6">Helps us pick realistic, affordable ingredients</p>
+                    <div className="flex flex-col gap-3">
+                      {budgetOptions.map((b) => {
+                        const selected = formData.budget === b.id;
+                        return (
+                          <button
+                            key={b.id}
+                            onClick={() => setFormData((p) => ({ ...p, budget: b.id }))}
+                            className={cn(
+                              "flex items-center gap-3 rounded-xl border-2 p-4 text-left transition-all",
+                              selected
+                                ? "border-primary bg-accent"
+                                : "border-border bg-card hover:border-primary/40"
+                            )}
+                          >
+                            <span className="text-lg">{b.emoji}</span>
+                            <div>
+                              <div className="font-medium text-sm">{b.label}</div>
+                              <div className="text-xs text-muted-foreground mt-0.5">{b.desc}</div>
+                            </div>
+                            {selected && <Check className="ml-auto h-4 w-4 text-primary" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {step === 7 && (
+                  <div>
+                    <h2 className="font-display text-xl font-semibold mb-1">Are you open to supplements?</h2>
+                    <p className="text-sm text-muted-foreground mb-6">Helps bridge protein gaps realistically</p>
+                    <div className="flex flex-col gap-3">
+                      {supplementOptions.map((s) => {
+                        const selected = formData.supplementWillingness === s.id;
+                        return (
+                          <button
+                            key={s.id}
+                            onClick={() => setFormData((p) => ({ ...p, supplementWillingness: s.id }))}
+                            className={cn(
+                              "rounded-xl border-2 p-4 text-left transition-all",
+                              selected
+                                ? "border-primary bg-accent"
+                                : "border-border bg-card hover:border-primary/40"
+                            )}
+                          >
+                            <div className="font-medium text-sm">{s.label}</div>
+                            <div className="text-xs text-muted-foreground mt-0.5">{s.desc}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {formData.supplementWillingness !== "none" && (
+                      <div className="mt-4">
+                        <Label htmlFor="currentSupps">Supplements you already use (optional)</Label>
+                        <Input
+                          id="currentSupps"
+                          placeholder="e.g. Whey protein, creatine, multivitamin..."
+                          value={formData.currentSupplements}
+                          onChange={(e) => setFormData((p) => ({ ...p, currentSupplements: e.target.value }))}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {step === 8 && (
+                  <div>
                     <h2 className="font-display text-xl font-semibold mb-1">Where will you work out?</h2>
                     <p className="text-sm text-muted-foreground mb-6">We'll only suggest exercises you can actually do</p>
                     <div className="flex flex-col gap-3">
@@ -439,7 +528,7 @@ export default function Onboarding() {
                   </div>
                 )}
 
-                {step === 7 && (
+                {step === 9 && (
                   <div>
                     <h2 className="font-display text-xl font-semibold mb-1">How often can you work out?</h2>
                     <p className="text-sm text-muted-foreground mb-6">We'll build your schedule around this</p>

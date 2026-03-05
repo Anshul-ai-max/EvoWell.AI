@@ -7,26 +7,123 @@ const corsHeaders = {
 };
 
 function calculateTDEE(gender: string, weight: number, height: number, age: number, goals: string[]): number {
-  // Mifflin-St Jeor equation
   let bmr: number;
   if (gender === "female") {
     bmr = 10 * weight + 6.25 * height - 5 * age - 161;
   } else {
     bmr = 10 * weight + 6.25 * height - 5 * age + 5;
   }
-
-  // Assume moderate activity (1.55 multiplier)
   let tdee = Math.round(bmr * 1.55);
-
-  // Adjust based on goals
   if (goals.includes("lose_weight")) {
     tdee -= 500;
   } else if (goals.includes("build_muscle")) {
     tdee += 300;
   }
-
-  // Clamp to reasonable range
   return Math.max(1200, Math.min(4500, tdee));
+}
+
+function buildSystemPrompt(
+  dailyCalories: number,
+  proteinGrams: number,
+  carbGrams: number,
+  fatGrams: number,
+  budget: string,
+  supplementWillingness: string,
+  isHighProteinVeg: boolean
+): string {
+  const budgetRules: Record<string, string> = {
+    budget: "BUDGET RULE: Use only affordable, locally available ingredients. No imported/premium items, protein bars, or expensive supplements. Prefer lentils, beans, eggs, seasonal vegetables, basic grains.",
+    moderate: "BUDGET RULE: Balance cost and nutrition. Some premium ingredients are fine but avoid consistently expensive items.",
+    no_limit: "BUDGET RULE: No cost constraints. Use the best quality ingredients available.",
+  };
+
+  const supplementRules: Record<string, string> = {
+    none: "SUPPLEMENT RULE: Do NOT include any supplements, protein powders, or shakes. All protein must come from whole foods only. If the protein target is very high, use high-protein food combinations (lentils+rice, paneer, tofu, chickpeas, soy chunks, nuts, seeds, Greek yogurt) and note the strategy in proteinNote.",
+    basic: "SUPPLEMENT RULE: You may include 1-2 protein shakes/scoops per day (whey or plant-based) to bridge protein gaps. Keep other nutrition from whole foods.",
+    open: "SUPPLEMENT RULE: You may freely include protein powder, creatine, BCAAs, or other supplements as needed. Include specific supplement recommendations in supplementSuggestions array.",
+  };
+
+  let highProteinVegNote = "";
+  if (isHighProteinVeg) {
+    highProteinVegNote = `
+HIGH-PROTEIN VEGETARIAN ALERT: This user needs ${proteinGrams}g protein on a vegetarian/vegan diet. This is challenging from food alone. 
+- If supplements are allowed, include 1-2 protein shakes to bridge the gap.
+- If NO supplements, use protein-dense combos: soy chunks (52g protein/100g), paneer (18g/100g), Greek yogurt (10g/100g), lentils (9g/100g cooked), chickpeas (9g/100g), tofu (8g/100g), peanut butter, seeds.
+- Be honest in proteinNote if hitting the exact target from food alone is unrealistic without very large portions.`;
+  }
+
+  return `You are an expert personal trainer and certified nutritionist. Generate a personalized weekly workout plan AND daily diet plan based on the user's profile.
+
+CRITICAL CALORIE RULES:
+- The user's DAILY CALORIE TARGET is ${dailyCalories} kcal (Mifflin-St Jeor).
+- Target macros: ~${proteinGrams}g protein, ~${carbGrams}g carbs, ~${fatGrams}g fat per day.
+- The total calories across ALL meals MUST sum to approximately ${dailyCalories} kcal (within ±50 kcal).
+- Each meal's calories must be realistic for the portion sizes listed.
+- Every meal must have realistic, accurate macro breakdowns (protein×4 + carbs×4 + fat×9 ≈ listed calories).
+
+REALISM RULES (CRITICAL):
+- Every food item MUST include specific portion sizes in grams or ml (e.g., "200g paneer tikka" not just "paneer tikka", "250ml milk" not just "milk").
+- Each meal must be a realistic portion a person can eat in one sitting. No meal should exceed 800 kcal unless it's the main lunch/dinner.
+- Use commonly available ingredients that a real person would cook or buy.
+
+${budgetRules[budget] || budgetRules.moderate}
+
+${supplementRules[supplementWillingness] || supplementRules.none}
+${highProteinVegNote}
+
+CRITICAL DIETARY RULES:
+- Strictly follow dietary preferences. "Vegetarian"/"Veg" = NO meat, chicken, fish, eggs. Use plant-based proteins only.
+- "Vegan" = exclude ALL animal products including dairy/honey.
+- "Keto" = keep carbs under 30g/day.
+- Respect ALL food allergies without exception.
+
+CUISINE/CULTURE RULES (CRITICAL):
+- Generate meals authentic to the user's preferred cuisine/culture.
+- Indian → poha, upma, idli, dosa, dal-chawal, roti-sabzi, paneer dishes, chole, rajma, paratha, khichdi, etc.
+- Mediterranean → hummus, falafel, tabbouleh, grilled fish, olive oil dishes, pita, Greek salad, etc.
+- East Asian → miso soup, stir-fry, rice bowls, tofu dishes, noodles, congee, etc.
+- Latin American → beans and rice, tacos, empanadas, ceviche, plantains, etc.
+- Every meal must feel authentic. No generic substitutions.
+
+WORKOUT ENVIRONMENT RULES:
+- "home_none": ONLY bodyweight exercises.
+- "home_basic": Bodyweight + dumbbells, bands, pull-up bar, kettlebells.
+- "gym": Full range — barbells, machines, cables, benches, racks.
+- "outdoor": Running, park exercises, bodyweight circuits.
+- "mixed": Combine all.
+- NEVER suggest equipment the user doesn't have.
+
+Return ONLY valid JSON with this exact structure, no markdown:
+{
+  "workout": {
+    "days": [
+      {
+        "day": "Monday",
+        "focus": "Upper Body - Push",
+        "exercises": [
+          { "name": "Push-ups", "sets": 4, "reps": 10, "rest": "90s", "tips": "Keep core tight." }
+        ]
+      }
+    ]
+  },
+  "diet": {
+    "dailyTarget": ${dailyCalories},
+    "proteinNote": "Brief explanation of protein strategy and whether target is achievable",
+    "supplementSuggestions": ["List of recommended supplements if user is open to them, empty array if not"],
+    "meals": [
+      {
+        "name": "Breakfast",
+        "time": "7:30 AM",
+        "items": ["200g Poha with 30g peanuts", "250ml Chai with milk"],
+        "calories": 350,
+        "protein": 12,
+        "carbs": 55,
+        "fat": 8
+      }
+    ]
+  }
+}
+Include 7 workout days (rest days with "Rest Day" focus and empty exercises). Include 5-6 meals/day. Total meal calories MUST equal ~${dailyCalories} kcal. Every item must have portion sizes in grams/ml.`;
 }
 
 serve(async (req) => {
@@ -56,93 +153,32 @@ serve(async (req) => {
     const gender = onboardingData.gender || "male";
     const dailyCalories = calculateTDEE(gender, weight, height, age, onboardingData.goals);
 
-    // Calculate macro targets
     const proteinGrams = Math.round(weight * (onboardingData.goals.includes("build_muscle") ? 2.0 : 1.6));
     const fatCalories = Math.round(dailyCalories * 0.25);
     const fatGrams = Math.round(fatCalories / 9);
     const proteinCalories = proteinGrams * 4;
     const carbGrams = Math.round((dailyCalories - proteinCalories - fatCalories) / 4);
 
-    const systemPrompt = `You are an expert personal trainer and certified nutritionist. Generate a personalized weekly workout plan AND daily diet plan based on the user's profile.
+    const budget = onboardingData.budget || "moderate";
+    const supplementWillingness = onboardingData.supplementWillingness || "none";
+    const currentSupplements = onboardingData.currentSupplements || "";
+    const dietPref = (onboardingData.dietaryPreferences || "").toLowerCase();
+    const isHighProteinVeg = proteinGrams > 100 && (dietPref.includes("veg") || dietPref.includes("vegan"));
 
-CRITICAL CALORIE RULES:
-- The user's DAILY CALORIE TARGET is ${dailyCalories} kcal. This is calculated using the Mifflin-St Jeor equation.
-- Target macros: ~${proteinGrams}g protein, ~${carbGrams}g carbs, ~${fatGrams}g fat per day.
-- The total calories across ALL meals MUST sum to approximately ${dailyCalories} kcal (within ±50 kcal).
-- Each meal's calories must be realistic for the portion sizes listed. Do NOT inflate or deflate numbers.
-- Every meal must have realistic, accurate macro breakdowns that add up correctly (protein×4 + carbs×4 + fat×9 ≈ listed calories).
-
-CRITICAL DIETARY RULES:
-- You MUST strictly follow the user's dietary preferences. If they say "Vegetarian" or "Veg", absolutely NO meat, chicken, fish, eggs, or any non-vegetarian items. Use only plant-based proteins like paneer, tofu, lentils, chickpeas, soy, nuts, seeds, dairy (milk, yogurt, cheese).
-- If they say "Vegan", exclude ALL animal products including dairy and honey.
-- If they say "Keto", keep carbs under 30g per day.
-- Respect ALL food allergies and restrictions without exception.
-
-CUISINE/CULTURE RULES (CRITICAL):
-- You MUST generate meals that are authentic to the user's preferred cuisine/culture.
-- If cuisine is "Indian", use traditional Indian dishes: poha, upma, idli, dosa, dal-chawal, roti-sabzi, paneer dishes, chole, rajma, paratha, khichdi, raita, lassi, etc. Do NOT use generic Western meals like oatmeal, grilled chicken salad, or protein shakes.
-- If cuisine is "Mediterranean", use dishes like hummus, falafel, tabbouleh, grilled fish, olive oil based dishes, pita, Greek salad, etc.
-- If cuisine is "East Asian", use dishes like miso soup, stir-fry, rice bowls, tofu dishes, noodles, congee, etc.
-- If cuisine is "Latin American", use dishes like beans and rice, tacos, empanadas, ceviche, plantains, etc.
-- If cuisine is "Middle Eastern", use dishes like shawarma, kebab, hummus, falafel, fattoush, labneh, etc.
-- If cuisine is "African", use dishes like jollof rice, injera, stews, fufu, groundnut soup, etc.
-- Every single meal must feel authentic to the chosen cuisine. No generic substitutions.
-
-WORKOUT ENVIRONMENT RULES (CRITICAL):
-- "Home (no equipment)" or "home_none": Use ONLY bodyweight exercises. Absolutely NO barbells, dumbbells, cables, or machines.
-- "Home (basic equipment)" or "home_basic": Use bodyweight exercises plus dumbbells, resistance bands, pull-up bar, and kettlebells only.
-- "Gym (full equipment)" or "gym": Use the full range — barbells, dumbbells, machines, cables, benches, racks, etc.
-- "Outdoor" or "outdoor": Use running, sprints, park bench exercises, bodyweight circuits, hill sprints, etc.
-- "Mixed" or "mixed": Combine home, gym, and outdoor exercises across the week.
-- NEVER suggest equipment the user doesn't have access to.
-
-- Tailor exercises to the user's fitness level.
-- Account for any injuries or limitations.
-
-Return ONLY valid JSON with this exact structure, no markdown:
-{
-  "workout": {
-    "days": [
-      {
-        "day": "Monday",
-        "focus": "Upper Body - Push",
-        "exercises": [
-          {
-            "name": "Push-ups",
-            "sets": 4,
-            "reps": 10,
-            "rest": "90s",
-            "tips": "Keep core tight throughout."
-          }
-        ]
-      }
-    ]
-  },
-  "diet": {
-    "dailyTarget": ${dailyCalories},
-    "meals": [
-      {
-        "name": "Breakfast",
-        "time": "7:30 AM",
-        "items": ["Poha with peanuts", "Chai"],
-        "calories": 350,
-        "protein": 12,
-        "carbs": 55,
-        "fat": 8
-      }
-    ]
-  }
-}
-Include 7 workout days (rest days included with focus "Rest Day" and empty exercises array). Include 5-6 meals per day. The sum of all meal calories MUST equal approximately ${dailyCalories} kcal. Every meal item must comply with the dietary preferences AND cuisine culture.`;
+    const systemPrompt = buildSystemPrompt(
+      dailyCalories, proteinGrams, carbGrams, fatGrams,
+      budget, supplementWillingness, isHighProteinVeg
+    );
 
     const dietLabel = onboardingData.dietaryPreferences || "No specific preference";
     const restrictionsLabel = onboardingData.restrictions || "None";
     const injuriesLabel = onboardingData.injuries || "None";
-
     const cuisineLabel = onboardingData.cuisine === "custom"
       ? (onboardingData.customCuisine || "No specific preference")
       : (onboardingData.cuisine || "No specific preference");
     const environmentLabel = onboardingData.workoutEnvironment || "No specific preference";
+    const budgetLabel = { budget: "Budget-friendly", moderate: "Moderate", no_limit: "No constraints" }[budget] || "Moderate";
+    const suppLabel = { none: "No supplements", basic: "Basic (protein powder only)", open: "Open to all supplements" }[supplementWillingness] || "None";
 
     const userPrompt = `Create a complete weekly plan for this person:
 - Gender: ${gender}
@@ -153,12 +189,15 @@ Include 7 workout days (rest days included with focus "Rest Day" and empty exerc
 - TARGET MACROS: ${proteinGrams}g protein, ${carbGrams}g carbs, ${fatGrams}g fat
 - Workout Frequency: ${onboardingData.frequency} days/week
 - DIETARY PREFERENCE (MUST FOLLOW STRICTLY): ${dietLabel}
-- FOOD ALLERGIES/RESTRICTIONS (MUST FOLLOW STRICTLY): ${restrictionsLabel}
-- CUISINE/CULTURE (MUST USE AUTHENTIC DISHES FROM THIS CULTURE): ${cuisineLabel}
-- WORKOUT ENVIRONMENT (ONLY USE EXERCISES POSSIBLE HERE): ${environmentLabel}
+- FOOD ALLERGIES/RESTRICTIONS: ${restrictionsLabel}
+- CUISINE/CULTURE: ${cuisineLabel}
+- WORKOUT ENVIRONMENT: ${environmentLabel}
+- BUDGET: ${budgetLabel}
+- SUPPLEMENT WILLINGNESS: ${suppLabel}
+- CURRENT SUPPLEMENTS: ${currentSupplements || "None"}
 - Injuries/Limitations: ${injuriesLabel}
 
-IMPORTANT: The total calories across all meals MUST sum to approximately ${dailyCalories} kcal. Each meal's macros must be accurate. Every meal must use authentic "${cuisineLabel}" cuisine and comply with "${dietLabel}" diet.`;
+IMPORTANT: Total calories across all meals MUST sum to ~${dailyCalories} kcal. Every food item must include portion sizes in grams/ml. Meals must be realistic and achievable.`;
 
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
