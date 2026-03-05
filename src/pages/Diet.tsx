@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { UtensilsCrossed } from "lucide-react";
+import { UtensilsCrossed, Info, Pill } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Meal {
@@ -13,18 +13,32 @@ interface Meal {
   fat: number;
 }
 
+interface DietPlan {
+  meals: Meal[];
+  proteinNote?: string;
+  supplementSuggestions?: string[];
+  dailyTarget?: number;
+}
+
 export default function Diet() {
-  const [meals, setMeals] = useState<Meal[]>([]);
+  const [plan, setPlan] = useState<DietPlan>({ meals: [] });
 
   useEffect(() => {
     const raw = localStorage.getItem("evowell_diet_plan");
     if (raw) {
       try {
         const parsed = JSON.parse(raw);
-        setMeals(parsed.meals || []);
+        setPlan({
+          meals: parsed.meals || [],
+          proteinNote: parsed.proteinNote,
+          supplementSuggestions: parsed.supplementSuggestions,
+          dailyTarget: parsed.dailyTarget,
+        });
       } catch { /* ignore */ }
     }
   }, []);
+
+  const { meals, proteinNote, supplementSuggestions } = plan;
 
   const totalCal = meals.reduce((s, m) => s + m.calories, 0);
   const totalP = meals.reduce((s, m) => s + m.protein, 0);
@@ -47,6 +61,39 @@ export default function Diet() {
         <h1 className="font-display text-2xl font-bold">Diet Plan</h1>
         <p className="text-sm text-muted-foreground mt-1">Your personalized daily meals</p>
       </motion.div>
+
+      {proteinNote && (
+        <Card className="border-0 shadow-sm bg-accent/50">
+          <CardContent className="p-4 flex gap-3 items-start">
+            <Info className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+            <div>
+              <div className="font-medium text-sm mb-0.5">Protein Strategy</div>
+              <p className="text-sm text-muted-foreground">{proteinNote}</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {supplementSuggestions && supplementSuggestions.length > 0 && (
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="font-display text-base flex items-center gap-2">
+              <Pill className="h-4 w-4 text-primary" />
+              Suggested Supplements
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-1.5">
+              {supplementSuggestions.map((s, i) => (
+                <li key={i} className="text-sm text-muted-foreground flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                  {s}
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="border-0 shadow-sm">
         <CardContent className="p-4">
