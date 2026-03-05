@@ -345,7 +345,7 @@ export default function Onboarding() {
                   </div>
                 )}
 
-                {step === 3 && (
+                {step === 4 && (
                   <div>
                     <h2 className="font-display text-xl font-semibold mb-1">Dietary preferences</h2>
                     <p className="text-sm text-muted-foreground mb-6">Required — helps personalize your diet plan</p>
@@ -373,7 +373,7 @@ export default function Onboarding() {
                   </div>
                 )}
 
-                {step === 4 && (
+                {step === 5 && (
                   <div>
                     <h2 className="font-display text-xl font-semibold mb-1">What type of cuisine do you prefer?</h2>
                     <p className="text-sm text-muted-foreground mb-6">We'll use authentic dishes from your culture</p>
@@ -412,7 +412,7 @@ export default function Onboarding() {
                   </div>
                 )}
 
-                {step === 5 && (
+                {step === 6 && (
                   <div>
                     <h2 className="font-display text-xl font-semibold mb-1">Where will you work out?</h2>
                     <p className="text-sm text-muted-foreground mb-6">We'll only suggest exercises you can actually do</p>
@@ -439,7 +439,7 @@ export default function Onboarding() {
                   </div>
                 )}
 
-                {step === 6 && (
+                {step === 7 && (
                   <div>
                     <h2 className="font-display text-xl font-semibold mb-1">How often can you work out?</h2>
                     <p className="text-sm text-muted-foreground mb-6">We'll build your schedule around this</p>
