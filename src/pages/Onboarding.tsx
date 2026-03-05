@@ -53,7 +53,12 @@ const frequencies = [
   { id: "daily", label: "Every day" },
 ];
 
-const STEPS = ["Goals", "Level", "Body", "Diet", "Cuisine", "Equipment", "Schedule"];
+const genders = [
+  { id: "male", label: "Male", emoji: "♂️" },
+  { id: "female", label: "Female", emoji: "♀️" },
+];
+
+const STEPS = ["Goals", "Level", "Gender", "Body", "Diet", "Cuisine", "Equipment", "Schedule"];
 
 interface FormData {
   goals: string[];
@@ -61,6 +66,7 @@ interface FormData {
   age: string;
   height: string;
   weight: string;
+  gender: string;
   dietaryPreferences: string;
   restrictions: string;
   injuries: string;
@@ -76,6 +82,7 @@ export default function Onboarding() {
   const [formData, setFormData] = useState<FormData>({
     goals: [],
     fitnessLevel: "",
+    gender: "",
     age: "",
     height: "",
     weight: "",
@@ -103,11 +110,12 @@ export default function Onboarding() {
     switch (step) {
       case 0: return formData.goals.length > 0;
       case 1: return !!formData.fitnessLevel;
-      case 2: return !!formData.age && !!formData.height && !!formData.weight;
-      case 3: return !!formData.dietaryPreferences.trim();
-      case 4: return !!formData.cuisine && (formData.cuisine !== "custom" || !!formData.customCuisine);
-      case 5: return !!formData.workoutEnvironment;
-      case 6: return !!formData.frequency;
+      case 2: return !!formData.gender;
+      case 3: return !!formData.age && !!formData.height && !!formData.weight;
+      case 4: return !!formData.dietaryPreferences.trim();
+      case 5: return !!formData.cuisine && (formData.cuisine !== "custom" || !!formData.customCuisine);
+      case 6: return !!formData.workoutEnvironment;
+      case 7: return !!formData.frequency;
       default: return false;
     }
   };
