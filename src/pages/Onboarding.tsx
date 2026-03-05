@@ -53,7 +53,12 @@ const frequencies = [
   { id: "daily", label: "Every day" },
 ];
 
-const STEPS = ["Goals", "Level", "Body", "Diet", "Cuisine", "Equipment", "Schedule"];
+const genders = [
+  { id: "male", label: "Male", emoji: "♂️" },
+  { id: "female", label: "Female", emoji: "♀️" },
+];
+
+const STEPS = ["Goals", "Level", "Gender", "Body", "Diet", "Cuisine", "Equipment", "Schedule"];
 
 interface FormData {
   goals: string[];
@@ -61,6 +66,7 @@ interface FormData {
   age: string;
   height: string;
   weight: string;
+  gender: string;
   dietaryPreferences: string;
   restrictions: string;
   injuries: string;
@@ -76,6 +82,7 @@ export default function Onboarding() {
   const [formData, setFormData] = useState<FormData>({
     goals: [],
     fitnessLevel: "",
+    gender: "",
     age: "",
     height: "",
     weight: "",
@@ -103,11 +110,12 @@ export default function Onboarding() {
     switch (step) {
       case 0: return formData.goals.length > 0;
       case 1: return !!formData.fitnessLevel;
-      case 2: return !!formData.age && !!formData.height && !!formData.weight;
-      case 3: return !!formData.dietaryPreferences.trim();
-      case 4: return !!formData.cuisine && (formData.cuisine !== "custom" || !!formData.customCuisine);
-      case 5: return !!formData.workoutEnvironment;
-      case 6: return !!formData.frequency;
+      case 2: return !!formData.gender;
+      case 3: return !!formData.age && !!formData.height && !!formData.weight;
+      case 4: return !!formData.dietaryPreferences.trim();
+      case 5: return !!formData.cuisine && (formData.cuisine !== "custom" || !!formData.customCuisine);
+      case 6: return !!formData.workoutEnvironment;
+      case 7: return !!formData.frequency;
       default: return false;
     }
   };
@@ -260,6 +268,34 @@ export default function Onboarding() {
 
                 {step === 2 && (
                   <div>
+                    <h2 className="font-display text-xl font-semibold mb-1">What's your gender?</h2>
+                    <p className="text-sm text-muted-foreground mb-6">Used for accurate calorie calculations</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {genders.map((g) => {
+                        const selected = formData.gender === g.id;
+                        return (
+                          <button
+                            key={g.id}
+                            onClick={() => setFormData((p) => ({ ...p, gender: g.id }))}
+                            className={cn(
+                              "flex items-center gap-3 rounded-xl border-2 p-4 text-left text-sm font-medium transition-all",
+                              selected
+                                ? "border-primary bg-accent text-accent-foreground"
+                                : "border-border bg-card hover:border-primary/40"
+                            )}
+                          >
+                            <span className="text-lg">{g.emoji}</span>
+                            <span>{g.label}</span>
+                            {selected && <Check className="ml-auto h-4 w-4 text-primary" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {step === 3 && (
+                  <div>
                     <h2 className="font-display text-xl font-semibold mb-1">Tell us about yourself</h2>
                     <p className="text-sm text-muted-foreground mb-6">Used to calculate your plan</p>
                     <div className="flex flex-col gap-4">
@@ -309,7 +345,7 @@ export default function Onboarding() {
                   </div>
                 )}
 
-                {step === 3 && (
+                {step === 4 && (
                   <div>
                     <h2 className="font-display text-xl font-semibold mb-1">Dietary preferences</h2>
                     <p className="text-sm text-muted-foreground mb-6">Required — helps personalize your diet plan</p>
@@ -337,7 +373,7 @@ export default function Onboarding() {
                   </div>
                 )}
 
-                {step === 4 && (
+                {step === 5 && (
                   <div>
                     <h2 className="font-display text-xl font-semibold mb-1">What type of cuisine do you prefer?</h2>
                     <p className="text-sm text-muted-foreground mb-6">We'll use authentic dishes from your culture</p>
@@ -376,7 +412,7 @@ export default function Onboarding() {
                   </div>
                 )}
 
-                {step === 5 && (
+                {step === 6 && (
                   <div>
                     <h2 className="font-display text-xl font-semibold mb-1">Where will you work out?</h2>
                     <p className="text-sm text-muted-foreground mb-6">We'll only suggest exercises you can actually do</p>
@@ -403,7 +439,7 @@ export default function Onboarding() {
                   </div>
                 )}
 
-                {step === 6 && (
+                {step === 7 && (
                   <div>
                     <h2 className="font-display text-xl font-semibold mb-1">How often can you work out?</h2>
                     <p className="text-sm text-muted-foreground mb-6">We'll build your schedule around this</p>
