@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Dumbbell, Check, Clock, ChevronDown, ChevronUp } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Dumbbell, Check, Clock, ChevronDown, Zap, Trophy, Target } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 
 const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -27,6 +28,15 @@ interface ExerciseState extends Exercise {
   completed: boolean;
 }
 
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: 0.1 + i * 0.07, duration: 0.4, ease: "easeOut" as const },
+  }),
+};
+
 export default function Workout() {
   const [plan, setPlan] = useState<WorkoutDay[]>([]);
   const [selectedDay, setSelectedDay] = useState(0);
@@ -40,7 +50,6 @@ export default function Workout() {
         const parsed = JSON.parse(raw);
         const days: WorkoutDay[] = parsed.days || [];
         setPlan(days);
-        // Set today's day as selected
         const todayIndex = new Date().getDay();
         const mapped = todayIndex === 0 ? 6 : todayIndex - 1;
         setSelectedDay(Math.min(mapped, days.length - 1));
@@ -70,100 +79,207 @@ export default function Workout() {
 
   const completedCount = exercises.filter((e) => e.completed).length;
   const currentDay = plan[selectedDay];
+  const progressPct = exercises.length > 0 ? (completedCount / exercises.length) * 100 : 0;
 
   if (plan.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <Dumbbell className="h-12 w-12 text-muted-foreground mb-4" />
+      <motion.div
+        className="flex flex-col items-center justify-center py-20 text-center"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+      >
+        <div className="h-20 w-20 rounded-2xl bg-secondary flex items-center justify-center mb-5">
+          <Dumbbell className="h-10 w-10 text-muted-foreground" />
+        </div>
         <h2 className="font-display text-xl font-semibold mb-1">No workout plan yet</h2>
         <p className="text-sm text-muted-foreground">Complete onboarding to generate your plan.</p>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-6">
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="font-display text-2xl font-bold">Workout Plan</h1>
         <p className="text-sm text-muted-foreground mt-1">{currentDay?.focus || "Rest Day"}</p>
       </motion.div>
 
       {/* Day selector */}
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {plan.map((d, i) => (
-          <button
-            key={d.day}
-            onClick={() => setSelectedDay(i)}
-            className={cn(
-              "flex h-12 min-w-[3rem] shrink-0 flex-col items-center justify-center rounded-xl text-xs font-medium transition-colors",
-              i === selectedDay
-                ? "bg-primary text-primary-foreground"
-                : "bg-secondary text-muted-foreground hover:bg-secondary/80"
-            )}
-          >
-            {dayShort[dayNames.indexOf(d.day)] || d.day.slice(0, 3)}
-          </button>
-        ))}
-      </div>
+      <motion.div
+        className="flex gap-2 overflow-x-auto pb-1"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+      >
+        {plan.map((d, i) => {
+          const isActive = i === selectedDay;
+          return (
+            <motion.button
+              key={d.day}
+              onClick={() => setSelectedDay(i)}
+              whileTap={{ scale: 0.95 }}
+              className={cn(
+                "flex h-14 min-w-[3.5rem] shrink-0 flex-col items-center justify-center rounded-xl text-xs font-medium transition-all",
+                isActive
+                  ? "bg-primary text-primary-foreground shadow-md"
+                  : "bg-secondary text-muted-foreground hover:bg-accent"
+              )}
+            >
+              <span className="text-[10px] opacity-70">
+                {dayShort[dayNames.indexOf(d.day)] || d.day.slice(0, 3)}
+              </span>
+              <span className="font-semibold">
+                {d.focus?.split(" ")[0]?.slice(0, 4) || "Rest"}
+              </span>
+            </motion.button>
+          );
+        })}
+      </motion.div>
 
       {exercises.length === 0 ? (
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-6 text-center text-muted-foreground text-sm">
-            Rest day — recover and stretch! 🧘
-          </CardContent>
-        </Card>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-8 text-center">
+              <div className="h-16 w-16 rounded-2xl bg-accent flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl">🧘</span>
+              </div>
+              <p className="text-sm text-muted-foreground">Rest day — recover and stretch!</p>
+            </CardContent>
+          </Card>
+        </motion.div>
       ) : (
         <>
-          <div className="text-sm text-muted-foreground">
-            {completedCount}/{exercises.length} exercises completed
-          </div>
-
-          <div className="space-y-3">
-            {exercises.map((ex) => (
-              <Card key={ex.id} className={cn("border-0 shadow-sm transition-colors", ex.completed && "opacity-60")}>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => toggleComplete(ex.id)}
-                      className={cn(
-                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 transition-colors",
-                        ex.completed
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border hover:border-primary/40"
-                      )}
-                    >
-                      {ex.completed && <Check className="h-4 w-4" />}
-                    </button>
-                    <div className="flex-1">
-                      <div className={cn("font-medium text-sm", ex.completed && "line-through")}>{ex.name}</div>
-                      <div className="text-xs text-muted-foreground mt-0.5">
-                        {ex.sets}×{ex.reps} · <Clock className="inline h-3 w-3" /> {ex.rest} rest
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => setExpandedId(expandedId === ex.id ? null : ex.id)}
-                    >
-                      {expandedId === ex.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                    </Button>
+          {/* Progress card */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <Card className="border-0 shadow-sm overflow-hidden">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    {progressPct === 100 ? (
+                      <Trophy className="h-5 w-5 text-warning" />
+                    ) : (
+                      <Target className="h-5 w-5 text-primary" />
+                    )}
+                    <span className="font-display font-semibold text-sm">
+                      {progressPct === 100 ? "Workout Complete! 🎉" : "Today's Progress"}
+                    </span>
                   </div>
-                  {expandedId === ex.id && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      className="mt-3 rounded-lg bg-accent/50 p-3 text-xs text-muted-foreground"
-                    >
-                      <div className="flex items-start gap-2">
-                        <Dumbbell className="mt-0.5 h-3 w-3 text-primary" />
-                        <span>{ex.tips}</span>
+                  <Badge variant="secondary" className="text-xs">
+                    {completedCount}/{exercises.length}
+                  </Badge>
+                </div>
+                <Progress value={progressPct} className="h-2.5" />
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Exercise cards */}
+          <div className="space-y-3">
+            {exercises.map((ex, i) => {
+              const isExpanded = expandedId === ex.id;
+              return (
+                <motion.div
+                  key={ex.id}
+                  custom={i}
+                  variants={cardVariants}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  <Card
+                    className={cn(
+                      "border-0 shadow-sm transition-all overflow-hidden",
+                      ex.completed && "opacity-60",
+                      !ex.completed && "hover:shadow-md"
+                    )}
+                  >
+                    <CardContent className="p-0">
+                      <div className="flex items-center gap-3 p-4">
+                        {/* Checkbox */}
+                        <motion.button
+                          onClick={(e) => { e.stopPropagation(); toggleComplete(ex.id); }}
+                          whileTap={{ scale: 0.85 }}
+                          className={cn(
+                            "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 transition-all",
+                            ex.completed
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-border hover:border-primary/40"
+                          )}
+                        >
+                          <AnimatePresence>
+                            {ex.completed && (
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                exit={{ scale: 0 }}
+                              >
+                                <Check className="h-4 w-4" />
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </motion.button>
+
+                        {/* Info */}
+                        <div
+                          className="flex-1 min-w-0 cursor-pointer"
+                          onClick={() => setExpandedId(isExpanded ? null : ex.id)}
+                        >
+                          <div className={cn("font-medium text-sm", ex.completed && "line-through")}>
+                            {ex.name}
+                          </div>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5">
+                              <Zap className="h-3 w-3 mr-0.5" />
+                              {ex.sets}×{ex.reps}
+                            </Badge>
+                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-5">
+                              <Clock className="h-3 w-3 mr-0.5" />
+                              {ex.rest}
+                            </Badge>
+                          </div>
+                        </div>
+
+                        {/* Expand */}
+                        <button
+                          onClick={() => setExpandedId(isExpanded ? null : ex.id)}
+                          className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-accent transition-colors"
+                        >
+                          <motion.div
+                            animate={{ rotate: isExpanded ? 180 : 0 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                          </motion.div>
+                        </button>
                       </div>
-                    </motion.div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
+
+                      {/* Tips expandable */}
+                      <AnimatePresence>
+                        {isExpanded && ex.tips && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.3, ease: "easeInOut" }}
+                            className="overflow-hidden"
+                          >
+                            <div className="mx-4 mb-4 rounded-xl bg-accent/50 p-3">
+                              <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                                <Dumbbell className="mt-0.5 h-3.5 w-3.5 text-primary shrink-0" />
+                                <span className="leading-relaxed">{ex.tips}</span>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
           </div>
         </>
       )}
