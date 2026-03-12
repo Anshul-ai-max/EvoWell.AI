@@ -96,6 +96,8 @@ interface FormData {
   budget: string;
   supplementWillingness: string;
   currentSupplements: string;
+  workoutStyle: string;
+  customWorkoutStyle: string;
   workoutEnvironment: string;
   frequency: string;
 }
