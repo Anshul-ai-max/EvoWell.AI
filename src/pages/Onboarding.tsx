@@ -79,7 +79,7 @@ const supplementOptions = [
   { id: "open", label: "Open to supplements", desc: "Protein, creatine, vitamins — whatever helps" },
 ];
 
-const STEPS = ["Goals", "Level", "Gender", "Body", "Diet", "Cuisine", "Budget", "Supplements", "Equipment", "Schedule"];
+const STEPS = ["Goals", "Level", "Gender", "Body", "Diet", "Cuisine", "Budget", "Supplements", "Split", "Equipment", "Schedule"];
 
 interface FormData {
   goals: string[];
