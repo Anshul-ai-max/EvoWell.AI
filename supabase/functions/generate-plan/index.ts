@@ -180,6 +180,18 @@ serve(async (req) => {
     const budgetLabel = { budget: "Budget-friendly", moderate: "Moderate", no_limit: "No constraints" }[budget] || "Moderate";
     const suppLabel = { none: "No supplements", basic: "Basic (protein powder only)", open: "Open to all supplements" }[supplementWillingness] || "None";
 
+    const workoutStyle = onboardingData.workoutStyle || "auto";
+    const customWorkoutStyle = onboardingData.customWorkoutStyle || "";
+    const workoutStyleLabels: Record<string, string> = {
+      auto: "Let AI decide the best split",
+      ppl: "Push/Pull/Legs split",
+      bro_split: "Bro Split (Chest day, Back day, Shoulders day, Arms day, Legs day)",
+      upper_lower: "Upper/Lower split",
+      full_body: "Full Body each session",
+      custom: customWorkoutStyle || "Custom split",
+    };
+    const workoutStyleLabel = workoutStyleLabels[workoutStyle] || "Let AI decide";
+
     const userPrompt = `Create a complete weekly plan for this person:
 - Gender: ${gender}
 - Goals: ${goals}
@@ -188,6 +200,7 @@ serve(async (req) => {
 - DAILY CALORIE TARGET: ${dailyCalories} kcal (MUST be followed exactly)
 - TARGET MACROS: ${proteinGrams}g protein, ${carbGrams}g carbs, ${fatGrams}g fat
 - Workout Frequency: ${onboardingData.frequency} days/week
+- WORKOUT SPLIT PREFERENCE: ${workoutStyleLabel}
 - DIETARY PREFERENCE (MUST FOLLOW STRICTLY): ${dietLabel}
 - FOOD ALLERGIES/RESTRICTIONS: ${restrictionsLabel}
 - CUISINE/CULTURE: ${cuisineLabel}
@@ -197,7 +210,8 @@ serve(async (req) => {
 - CURRENT SUPPLEMENTS: ${currentSupplements || "None"}
 - Injuries/Limitations: ${injuriesLabel}
 
-IMPORTANT: Total calories across all meals MUST sum to ~${dailyCalories} kcal. Every food item must include portion sizes in grams/ml. Meals must be realistic and achievable.`;
+IMPORTANT: Total calories across all meals MUST sum to ~${dailyCalories} kcal. Every food item must include portion sizes in grams/ml. Meals must be realistic and achievable.
+${workoutStyle !== "auto" ? `IMPORTANT: You MUST use the "${workoutStyleLabel}" training structure. Do NOT use a different split.` : ""}`;
 
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",

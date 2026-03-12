@@ -136,6 +136,9 @@ const cardVariants = {
 export default function Diet() {
   const [plan, setPlan] = useState<DietPlan>({ meals: [] });
   const [expandedMeal, setExpandedMeal] = useState<string | null>(null);
+  const [customizeOpen, setCustomizeOpen] = useState(false);
+  const [customizeText, setCustomizeText] = useState("");
+  const [customizing, setCustomizing] = useState(false);
 
   useEffect(() => {
     const raw = localStorage.getItem("evowell_diet_plan");
