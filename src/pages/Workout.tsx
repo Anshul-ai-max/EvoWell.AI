@@ -321,6 +321,60 @@ export default function Workout() {
           </div>
         </>
       )}
+
+      {/* Floating Customize Button */}
+      <motion.div
+        className="fixed bottom-24 right-4 z-40"
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ delay: 0.5, type: "spring" }}
+      >
+        <Button
+          size="lg"
+          className="rounded-full shadow-lg gap-2 px-5"
+          onClick={() => setCustomizeOpen(true)}
+        >
+          <Pencil className="h-4 w-4" />
+          Customize
+        </Button>
+      </motion.div>
+
+      {/* Customize Sheet */}
+      <Sheet open={customizeOpen} onOpenChange={setCustomizeOpen}>
+        <SheetContent side="bottom" className="rounded-t-2xl">
+          <SheetHeader>
+            <SheetTitle className="font-display">Customize Your Workout</SheetTitle>
+            <SheetDescription>
+              Describe what you want — e.g. "Give me a bro split", "Replace bench press with dumbbell press", "Add more core exercises"
+            </SheetDescription>
+          </SheetHeader>
+          <div className="mt-4 space-y-4">
+            <Textarea
+              placeholder="e.g. Switch to upper/lower split, add more compound movements, reduce rest times..."
+              value={customizeText}
+              onChange={(e) => setCustomizeText(e.target.value)}
+              className="min-h-[100px]"
+            />
+            <Button
+              onClick={handleCustomize}
+              disabled={!customizeText.trim() || customizing}
+              className="w-full gap-2"
+            >
+              {customizing ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Regenerating…
+                </>
+              ) : (
+                <>
+                  <Pencil className="h-4 w-4" />
+                  Apply Changes
+                </>
+              )}
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
