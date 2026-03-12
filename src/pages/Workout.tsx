@@ -46,6 +46,9 @@ export default function Workout() {
   const [selectedDay, setSelectedDay] = useState(0);
   const [exercises, setExercises] = useState<ExerciseState[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [customizeOpen, setCustomizeOpen] = useState(false);
+  const [customizeText, setCustomizeText] = useState("");
+  const [customizing, setCustomizing] = useState(false);
 
   useEffect(() => {
     const raw = localStorage.getItem("evowell_workout_plan");
