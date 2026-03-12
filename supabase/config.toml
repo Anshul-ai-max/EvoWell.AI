@@ -2,3 +2,6 @@ project_id = "hfzastqxswstgbdkgcxd"
 
 [functions.generate-plan]
 verify_jwt = false
+
+[functions.modify-plan]
+verify_jwt = false

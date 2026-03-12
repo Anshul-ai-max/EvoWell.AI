@@ -37,6 +37,15 @@ const cuisines = [
   { id: "custom", label: "Custom", emoji: "✏️" },
 ];
 
+const workoutStyles = [
+  { id: "auto", label: "Let AI Decide", desc: "AI picks the best split for your goals", emoji: "🤖" },
+  { id: "ppl", label: "Push / Pull / Legs", desc: "Classic 3-way split for balanced development", emoji: "🔄" },
+  { id: "bro_split", label: "Bro Split", desc: "Chest, Back, Shoulders, Arms, Legs — one muscle group per day", emoji: "💪" },
+  { id: "upper_lower", label: "Upper / Lower", desc: "Alternate upper and lower body days", emoji: "⬆️" },
+  { id: "full_body", label: "Full Body", desc: "Hit every muscle group each session", emoji: "🏋️" },
+  { id: "custom", label: "Custom", desc: "Describe your own split", emoji: "✏️" },
+];
+
 const workoutEnvironments = [
   { id: "home_none", label: "Home (no equipment)", desc: "Bodyweight exercises only" },
   { id: "home_basic", label: "Home (basic equipment)", desc: "Dumbbells, resistance bands, pull-up bar" },
@@ -70,7 +79,7 @@ const supplementOptions = [
   { id: "open", label: "Open to supplements", desc: "Protein, creatine, vitamins — whatever helps" },
 ];
 
-const STEPS = ["Goals", "Level", "Gender", "Body", "Diet", "Cuisine", "Budget", "Supplements", "Equipment", "Schedule"];
+const STEPS = ["Goals", "Level", "Gender", "Body", "Diet", "Cuisine", "Budget", "Supplements", "Split", "Equipment", "Schedule"];
 
 interface FormData {
   goals: string[];
@@ -87,6 +96,8 @@ interface FormData {
   budget: string;
   supplementWillingness: string;
   currentSupplements: string;
+  workoutStyle: string;
+  customWorkoutStyle: string;
   workoutEnvironment: string;
   frequency: string;
 }
@@ -109,6 +120,8 @@ export default function Onboarding() {
     budget: "",
     supplementWillingness: "",
     currentSupplements: "",
+    workoutStyle: "auto",
+    customWorkoutStyle: "",
     workoutEnvironment: "",
     frequency: "",
   });
@@ -134,8 +147,9 @@ export default function Onboarding() {
       case 5: return !!formData.cuisine && (formData.cuisine !== "custom" || !!formData.customCuisine);
       case 6: return !!formData.budget;
       case 7: return !!formData.supplementWillingness;
-      case 8: return !!formData.workoutEnvironment;
-      case 9: return !!formData.frequency;
+      case 8: return !!formData.workoutStyle && (formData.workoutStyle !== "custom" || !!formData.customWorkoutStyle.trim());
+      case 9: return !!formData.workoutEnvironment;
+      case 10: return !!formData.frequency;
       default: return false;
     }
   };
@@ -503,6 +517,49 @@ export default function Onboarding() {
 
                 {step === 8 && (
                   <div>
+                    <h2 className="font-display text-xl font-semibold mb-1">Preferred workout split?</h2>
+                    <p className="text-sm text-muted-foreground mb-6">Choose how you want to structure your training</p>
+                    <div className="flex flex-col gap-3">
+                      {workoutStyles.map((ws) => {
+                        const selected = formData.workoutStyle === ws.id;
+                        return (
+                          <button
+                            key={ws.id}
+                            onClick={() => setFormData((p) => ({ ...p, workoutStyle: ws.id }))}
+                            className={cn(
+                              "flex items-center gap-3 rounded-xl border-2 p-4 text-left transition-all",
+                              selected
+                                ? "border-primary bg-accent"
+                                : "border-border bg-card hover:border-primary/40"
+                            )}
+                          >
+                            <span className="text-lg">{ws.emoji}</span>
+                            <div>
+                              <div className="font-medium text-sm">{ws.label}</div>
+                              <div className="text-xs text-muted-foreground mt-0.5">{ws.desc}</div>
+                            </div>
+                            {selected && <Check className="ml-auto h-4 w-4 text-primary" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {formData.workoutStyle === "custom" && (
+                      <div className="mt-4">
+                        <Label htmlFor="customSplit">Describe your custom split</Label>
+                        <Textarea
+                          id="customSplit"
+                          placeholder="e.g. Day 1: Chest+Triceps, Day 2: Back+Biceps, Day 3: Legs+Shoulders..."
+                          value={formData.customWorkoutStyle}
+                          onChange={(e) => setFormData((p) => ({ ...p, customWorkoutStyle: e.target.value }))}
+                          className="min-h-[80px]"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {step === 9 && (
+                  <div>
                     <h2 className="font-display text-xl font-semibold mb-1">Where will you work out?</h2>
                     <p className="text-sm text-muted-foreground mb-6">We'll only suggest exercises you can actually do</p>
                     <div className="flex flex-col gap-3">
@@ -528,7 +585,7 @@ export default function Onboarding() {
                   </div>
                 )}
 
-                {step === 9 && (
+                {step === 10 && (
                   <div>
                     <h2 className="font-display text-xl font-semibold mb-1">How often can you work out?</h2>
                     <p className="text-sm text-muted-foreground mb-6">We'll build your schedule around this</p>

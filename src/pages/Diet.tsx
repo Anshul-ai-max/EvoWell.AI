@@ -1,9 +1,13 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { UtensilsCrossed, Info, Pill, Sunrise, Sun, Moon, Cookie, ChevronDown, Flame, Beef, Wheat, Droplets } from "lucide-react";
+import { UtensilsCrossed, Info, Pill, Sunrise, Sun, Moon, Cookie, ChevronDown, Flame, Beef, Wheat, Droplets, Pencil, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { toast } from "sonner";
 
 interface Meal {
   name: string;
@@ -132,6 +136,9 @@ const cardVariants = {
 export default function Diet() {
   const [plan, setPlan] = useState<DietPlan>({ meals: [] });
   const [expandedMeal, setExpandedMeal] = useState<string | null>(null);
+  const [customizeOpen, setCustomizeOpen] = useState(false);
+  const [customizeText, setCustomizeText] = useState("");
+  const [customizing, setCustomizing] = useState(false);
 
   useEffect(() => {
     const raw = localStorage.getItem("evowell_diet_plan");
@@ -147,6 +154,40 @@ export default function Diet() {
       } catch { /* ignore */ }
     }
   }, []);
+
+  const handleCustomize = async () => {
+    if (!customizeText.trim()) return;
+    setCustomizing(true);
+    try {
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/modify-plan`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ currentPlan: plan, modifyRequest: customizeText, planType: "diet" }),
+        }
+      );
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to modify plan");
+      }
+      const newPlan = await resp.json();
+      setPlan({
+        meals: newPlan.meals || [],
+        proteinNote: newPlan.proteinNote,
+        supplementSuggestions: newPlan.supplementSuggestions,
+        dailyTarget: newPlan.dailyTarget,
+      });
+      localStorage.setItem("evowell_diet_plan", JSON.stringify(newPlan));
+      toast.success("Diet plan updated!");
+      setCustomizeOpen(false);
+      setCustomizeText("");
+    } catch (e: any) {
+      toast.error(e.message || "Something went wrong");
+    } finally {
+      setCustomizing(false);
+    }
+  };
 
   const { meals, proteinNote, supplementSuggestions, dailyTarget } = plan;
 
@@ -353,6 +394,60 @@ export default function Diet() {
           );
         })}
       </div>
+
+      {/* Floating Customize Button */}
+      <motion.div
+        className="fixed bottom-24 right-4 z-40"
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ delay: 0.5, type: "spring" }}
+      >
+        <Button
+          size="lg"
+          className="rounded-full shadow-lg gap-2 px-5"
+          onClick={() => setCustomizeOpen(true)}
+        >
+          <Pencil className="h-4 w-4" />
+          Customize
+        </Button>
+      </motion.div>
+
+      {/* Customize Sheet */}
+      <Sheet open={customizeOpen} onOpenChange={setCustomizeOpen}>
+        <SheetContent side="bottom" className="rounded-t-2xl">
+          <SheetHeader>
+            <SheetTitle className="font-display">Customize Your Diet</SheetTitle>
+            <SheetDescription>
+              Describe what you want to change — e.g. "I can't eat soya or sprouts", "Add more protein-rich snacks", "Make it budget-friendly"
+            </SheetDescription>
+          </SheetHeader>
+          <div className="mt-4 space-y-4">
+            <Textarea
+              placeholder="e.g. Replace paneer with tofu, I'm lactose intolerant, add more variety..."
+              value={customizeText}
+              onChange={(e) => setCustomizeText(e.target.value)}
+              className="min-h-[100px]"
+            />
+            <Button
+              onClick={handleCustomize}
+              disabled={!customizeText.trim() || customizing}
+              className="w-full gap-2"
+            >
+              {customizing ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Regenerating…
+                </>
+              ) : (
+                <>
+                  <Pencil className="h-4 w-4" />
+                  Apply Changes
+                </>
+              )}
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

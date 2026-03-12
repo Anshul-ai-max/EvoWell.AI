@@ -1,9 +1,13 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Dumbbell, Check, Clock, ChevronDown, Zap, Trophy, Target } from "lucide-react";
+import { Dumbbell, Check, Clock, ChevronDown, Zap, Trophy, Target, Pencil, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -42,6 +46,9 @@ export default function Workout() {
   const [selectedDay, setSelectedDay] = useState(0);
   const [exercises, setExercises] = useState<ExerciseState[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [customizeOpen, setCustomizeOpen] = useState(false);
+  const [customizeText, setCustomizeText] = useState("");
+  const [customizing, setCustomizing] = useState(false);
 
   useEffect(() => {
     const raw = localStorage.getItem("evowell_workout_plan");
@@ -75,6 +82,37 @@ export default function Workout() {
     setExercises((prev) =>
       prev.map((ex) => (ex.id === id ? { ...ex, completed: !ex.completed } : ex))
     );
+  };
+
+  const handleCustomize = async () => {
+    if (!customizeText.trim()) return;
+    setCustomizing(true);
+    try {
+      const currentWorkoutPlan = { days: plan };
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/modify-plan`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ currentPlan: currentWorkoutPlan, modifyRequest: customizeText, planType: "workout" }),
+        }
+      );
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to modify plan");
+      }
+      const newPlan = await resp.json();
+      const newDays: WorkoutDay[] = newPlan.days || [];
+      setPlan(newDays);
+      localStorage.setItem("evowell_workout_plan", JSON.stringify(newPlan));
+      toast.success("Workout plan updated!");
+      setCustomizeOpen(false);
+      setCustomizeText("");
+    } catch (e: any) {
+      toast.error(e.message || "Something went wrong");
+    } finally {
+      setCustomizing(false);
+    }
   };
 
   const completedCount = exercises.filter((e) => e.completed).length;
@@ -283,6 +321,60 @@ export default function Workout() {
           </div>
         </>
       )}
+
+      {/* Floating Customize Button */}
+      <motion.div
+        className="fixed bottom-24 right-4 z-40"
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ delay: 0.5, type: "spring" }}
+      >
+        <Button
+          size="lg"
+          className="rounded-full shadow-lg gap-2 px-5"
+          onClick={() => setCustomizeOpen(true)}
+        >
+          <Pencil className="h-4 w-4" />
+          Customize
+        </Button>
+      </motion.div>
+
+      {/* Customize Sheet */}
+      <Sheet open={customizeOpen} onOpenChange={setCustomizeOpen}>
+        <SheetContent side="bottom" className="rounded-t-2xl">
+          <SheetHeader>
+            <SheetTitle className="font-display">Customize Your Workout</SheetTitle>
+            <SheetDescription>
+              Describe what you want — e.g. "Give me a bro split", "Replace bench press with dumbbell press", "Add more core exercises"
+            </SheetDescription>
+          </SheetHeader>
+          <div className="mt-4 space-y-4">
+            <Textarea
+              placeholder="e.g. Switch to upper/lower split, add more compound movements, reduce rest times..."
+              value={customizeText}
+              onChange={(e) => setCustomizeText(e.target.value)}
+              className="min-h-[100px]"
+            />
+            <Button
+              onClick={handleCustomize}
+              disabled={!customizeText.trim() || customizing}
+              className="w-full gap-2"
+            >
+              {customizing ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Regenerating…
+                </>
+              ) : (
+                <>
+                  <Pencil className="h-4 w-4" />
+                  Apply Changes
+                </>
+              )}
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
