@@ -155,6 +155,40 @@ export default function Diet() {
     }
   }, []);
 
+  const handleCustomize = async () => {
+    if (!customizeText.trim()) return;
+    setCustomizing(true);
+    try {
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/modify-plan`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ currentPlan: plan, modifyRequest: customizeText, planType: "diet" }),
+        }
+      );
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to modify plan");
+      }
+      const newPlan = await resp.json();
+      setPlan({
+        meals: newPlan.meals || [],
+        proteinNote: newPlan.proteinNote,
+        supplementSuggestions: newPlan.supplementSuggestions,
+        dailyTarget: newPlan.dailyTarget,
+      });
+      localStorage.setItem("evowell_diet_plan", JSON.stringify(newPlan));
+      toast.success("Diet plan updated!");
+      setCustomizeOpen(false);
+      setCustomizeText("");
+    } catch (e: any) {
+      toast.error(e.message || "Something went wrong");
+    } finally {
+      setCustomizing(false);
+    }
+  };
+
   const { meals, proteinNote, supplementSuggestions, dailyTarget } = plan;
 
   const totalCal = meals.reduce((s, m) => s + m.calories, 0);
