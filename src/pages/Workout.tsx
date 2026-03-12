@@ -84,6 +84,37 @@ export default function Workout() {
     );
   };
 
+  const handleCustomize = async () => {
+    if (!customizeText.trim()) return;
+    setCustomizing(true);
+    try {
+      const currentWorkoutPlan = { days: plan };
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/modify-plan`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ currentPlan: currentWorkoutPlan, modifyRequest: customizeText, planType: "workout" }),
+        }
+      );
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to modify plan");
+      }
+      const newPlan = await resp.json();
+      const newDays: WorkoutDay[] = newPlan.days || [];
+      setPlan(newDays);
+      localStorage.setItem("evowell_workout_plan", JSON.stringify(newPlan));
+      toast.success("Workout plan updated!");
+      setCustomizeOpen(false);
+      setCustomizeText("");
+    } catch (e: any) {
+      toast.error(e.message || "Something went wrong");
+    } finally {
+      setCustomizing(false);
+    }
+  };
+
   const completedCount = exercises.filter((e) => e.completed).length;
   const currentDay = plan[selectedDay];
   const progressPct = exercises.length > 0 ? (completedCount / exercises.length) * 100 : 0;
