@@ -517,6 +517,49 @@ export default function Onboarding() {
 
                 {step === 8 && (
                   <div>
+                    <h2 className="font-display text-xl font-semibold mb-1">Preferred workout split?</h2>
+                    <p className="text-sm text-muted-foreground mb-6">Choose how you want to structure your training</p>
+                    <div className="flex flex-col gap-3">
+                      {workoutStyles.map((ws) => {
+                        const selected = formData.workoutStyle === ws.id;
+                        return (
+                          <button
+                            key={ws.id}
+                            onClick={() => setFormData((p) => ({ ...p, workoutStyle: ws.id }))}
+                            className={cn(
+                              "flex items-center gap-3 rounded-xl border-2 p-4 text-left transition-all",
+                              selected
+                                ? "border-primary bg-accent"
+                                : "border-border bg-card hover:border-primary/40"
+                            )}
+                          >
+                            <span className="text-lg">{ws.emoji}</span>
+                            <div>
+                              <div className="font-medium text-sm">{ws.label}</div>
+                              <div className="text-xs text-muted-foreground mt-0.5">{ws.desc}</div>
+                            </div>
+                            {selected && <Check className="ml-auto h-4 w-4 text-primary" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {formData.workoutStyle === "custom" && (
+                      <div className="mt-4">
+                        <Label htmlFor="customSplit">Describe your custom split</Label>
+                        <Textarea
+                          id="customSplit"
+                          placeholder="e.g. Day 1: Chest+Triceps, Day 2: Back+Biceps, Day 3: Legs+Shoulders..."
+                          value={formData.customWorkoutStyle}
+                          onChange={(e) => setFormData((p) => ({ ...p, customWorkoutStyle: e.target.value }))}
+                          className="min-h-[80px]"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {step === 9 && (
+                  <div>
                     <h2 className="font-display text-xl font-semibold mb-1">Where will you work out?</h2>
                     <p className="text-sm text-muted-foreground mb-6">We'll only suggest exercises you can actually do</p>
                     <div className="flex flex-col gap-3">
@@ -542,7 +585,7 @@ export default function Onboarding() {
                   </div>
                 )}
 
-                {step === 9 && (
+                {step === 10 && (
                   <div>
                     <h2 className="font-display text-xl font-semibold mb-1">How often can you work out?</h2>
                     <p className="text-sm text-muted-foreground mb-6">We'll build your schedule around this</p>
