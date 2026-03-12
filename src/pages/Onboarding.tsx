@@ -37,6 +37,15 @@ const cuisines = [
   { id: "custom", label: "Custom", emoji: "✏️" },
 ];
 
+const workoutStyles = [
+  { id: "auto", label: "Let AI Decide", desc: "AI picks the best split for your goals", emoji: "🤖" },
+  { id: "ppl", label: "Push / Pull / Legs", desc: "Classic 3-way split for balanced development", emoji: "🔄" },
+  { id: "bro_split", label: "Bro Split", desc: "Chest, Back, Shoulders, Arms, Legs — one muscle group per day", emoji: "💪" },
+  { id: "upper_lower", label: "Upper / Lower", desc: "Alternate upper and lower body days", emoji: "⬆️" },
+  { id: "full_body", label: "Full Body", desc: "Hit every muscle group each session", emoji: "🏋️" },
+  { id: "custom", label: "Custom", desc: "Describe your own split", emoji: "✏️" },
+];
+
 const workoutEnvironments = [
   { id: "home_none", label: "Home (no equipment)", desc: "Bodyweight exercises only" },
   { id: "home_basic", label: "Home (basic equipment)", desc: "Dumbbells, resistance bands, pull-up bar" },
