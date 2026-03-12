@@ -147,8 +147,9 @@ export default function Onboarding() {
       case 5: return !!formData.cuisine && (formData.cuisine !== "custom" || !!formData.customCuisine);
       case 6: return !!formData.budget;
       case 7: return !!formData.supplementWillingness;
-      case 8: return !!formData.workoutEnvironment;
-      case 9: return !!formData.frequency;
+      case 8: return !!formData.workoutStyle && (formData.workoutStyle !== "custom" || !!formData.customWorkoutStyle.trim());
+      case 9: return !!formData.workoutEnvironment;
+      case 10: return !!formData.frequency;
       default: return false;
     }
   };
