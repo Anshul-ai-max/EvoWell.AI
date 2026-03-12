@@ -120,6 +120,8 @@ export default function Onboarding() {
     budget: "",
     supplementWillingness: "",
     currentSupplements: "",
+    workoutStyle: "auto",
+    customWorkoutStyle: "",
     workoutEnvironment: "",
     frequency: "",
   });
