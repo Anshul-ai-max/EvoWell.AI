@@ -1,9 +1,13 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { UtensilsCrossed, Info, Pill, Sunrise, Sun, Moon, Cookie, ChevronDown, Flame, Beef, Wheat, Droplets } from "lucide-react";
+import { UtensilsCrossed, Info, Pill, Sunrise, Sun, Moon, Cookie, ChevronDown, Flame, Beef, Wheat, Droplets, Pencil, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { toast } from "sonner";
 
 interface Meal {
   name: string;
