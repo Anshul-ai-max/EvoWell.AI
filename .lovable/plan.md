@@ -1,26 +1,34 @@
 
 
-# Add a "Reset & Re-onboard" Option
+# Fix: "Failed to Fetch" — Missing CORS Headers
 
-## The Problem
+## Root Cause
+Both edge functions (`generate-plan` and `modify-plan`) have incomplete CORS headers. The Supabase JS client sends additional headers (`x-supabase-client-platform`, etc.) that aren't listed in `Access-Control-Allow-Headers`, causing the browser to block the preflight OPTIONS request entirely — resulting in "Failed to fetch".
 
-Once you complete onboarding, the app sets `evowell_onboarded` in localStorage and always redirects you to the Dashboard. There's no way to go back through onboarding to test with different preferences without manually clearing browser data.
+## Fix
 
-## Solution
+Update the `corsHeaders` in **both** files:
 
-Add a **"Reset Profile"** button on the **Profile page** that:
-1. Clears all EvoWell localStorage keys (`evowell_onboarded`, `evowell_onboarding`, `evowell_workout_plan`, `evowell_diet_plan`)
-2. Redirects you back to `/onboarding`
+**File: `supabase/functions/generate-plan/index.ts`** (line 3-7)
+**File: `supabase/functions/modify-plan/index.ts`** (line 3-7)
 
-This way you can easily re-test the full flow anytime.
+Replace:
+```typescript
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
+```
 
-## Technical Details
+With:
+```typescript
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+```
 
-**File to modify: `src/pages/Profile.tsx`**
-
-- Add a "Reset Profile & Start Over" button (with a confirmation dialog to prevent accidental clicks)
-- On confirm: clear all `evowell_*` keys from localStorage and navigate to `/onboarding`
-- Style it as a destructive/outline button at the bottom of the profile page
-
-**No other files need changes.**
+That's it — two lines changed in two files. No other changes needed.
 
