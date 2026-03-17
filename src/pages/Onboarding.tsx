@@ -10,6 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const goals = [
   { id: "lose_weight", label: "Lose Weight", emoji: "🔥" },
