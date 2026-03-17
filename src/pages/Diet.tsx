@@ -160,19 +160,10 @@ export default function Diet() {
     if (!customizeText.trim()) return;
     setCustomizing(true);
     try {
-      const resp = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/modify-plan`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ currentPlan: plan, modifyRequest: customizeText, planType: "diet" }),
-        }
-      );
-      if (!resp.ok) {
-        const err = await resp.json().catch(() => ({}));
-        throw new Error(err.error || "Failed to modify plan");
-      }
-      const newPlan = await resp.json();
+      const { data: newPlan, error } = await supabase.functions.invoke('modify-plan', {
+        body: { currentPlan: plan, modifyRequest: customizeText, planType: "diet" },
+      });
+      if (error) throw new Error(error.message || "Failed to modify plan");
       setPlan({
         meals: newPlan.meals || [],
         proteinNote: newPlan.proteinNote,
