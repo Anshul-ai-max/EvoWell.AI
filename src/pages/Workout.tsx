@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const dayShort = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -89,19 +90,10 @@ export default function Workout() {
     setCustomizing(true);
     try {
       const currentWorkoutPlan = { days: plan };
-      const resp = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/modify-plan`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ currentPlan: currentWorkoutPlan, modifyRequest: customizeText, planType: "workout" }),
-        }
-      );
-      if (!resp.ok) {
-        const err = await resp.json().catch(() => ({}));
-        throw new Error(err.error || "Failed to modify plan");
-      }
-      const newPlan = await resp.json();
+      const { data: newPlan, error } = await supabase.functions.invoke('modify-plan', {
+        body: { currentPlan: currentWorkoutPlan, modifyRequest: customizeText, planType: "workout" },
+      });
+      if (error) throw new Error(error.message || "Failed to modify plan");
       const newDays: WorkoutDay[] = newPlan.days || [];
       setPlan(newDays);
       localStorage.setItem("evowell_workout_plan", JSON.stringify(newPlan));

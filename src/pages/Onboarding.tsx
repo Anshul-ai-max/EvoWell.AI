@@ -10,6 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const goals = [
   { id: "lose_weight", label: "Lose Weight", emoji: "🔥" },
@@ -160,19 +161,10 @@ export default function Onboarding() {
     localStorage.setItem("evowell_onboarding", JSON.stringify(formData));
     setGenerating(true);
     try {
-      const resp = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-plan`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ onboardingData: formData }),
-        }
-      );
-      if (!resp.ok) {
-        const err = await resp.json().catch(() => ({}));
-        throw new Error(err.error || "Failed to generate plan");
-      }
-      const plan = await resp.json();
+      const { data: plan, error } = await supabase.functions.invoke('generate-plan', {
+        body: { onboardingData: formData },
+      });
+      if (error) throw new Error(error.message || "Failed to generate plan");
       localStorage.setItem("evowell_workout_plan", JSON.stringify(plan.workout));
       localStorage.setItem("evowell_diet_plan", JSON.stringify(plan.diet));
       localStorage.setItem("evowell_onboarded", "true");
