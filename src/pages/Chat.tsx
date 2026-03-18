@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Send, Bot, User } from "lucide-react";
+import { ArrowLeft, Send, Bot } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,21 @@ import { cn } from "@/lib/utils";
 interface Message {
   role: "user" | "assistant";
   content: string;
+}
+
+function TypingIndicator() {
+  return (
+    <div className="flex gap-2">
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent">
+        <Bot className="h-3.5 w-3.5 text-accent-foreground" />
+      </div>
+      <div className="rounded-2xl bg-secondary px-4 py-3 flex gap-1 items-center">
+        <span className="typing-dot h-1.5 w-1.5 rounded-full bg-muted-foreground" />
+        <span className="typing-dot h-1.5 w-1.5 rounded-full bg-muted-foreground" />
+        <span className="typing-dot h-1.5 w-1.5 rounded-full bg-muted-foreground" />
+      </div>
+    </div>
+  );
 }
 
 export default function Chat() {
@@ -30,7 +45,6 @@ export default function Chat() {
     setInput("");
     setIsLoading(true);
 
-    // Placeholder — will connect to AI edge function later
     setTimeout(() => {
       setMessages((prev) => [
         ...prev,
@@ -43,16 +57,16 @@ export default function Chat() {
   return (
     <div className="flex h-screen flex-col bg-background">
       {/* Header */}
-      <header className="flex items-center gap-3 border-b border-border px-4 py-3">
-        <Button variant="ghost" size="icon" asChild>
+      <header className="flex items-center gap-3 glass-strong px-4 py-3">
+        <Button variant="ghost" size="icon" asChild className="rounded-xl">
           <Link to="/dashboard"><ArrowLeft className="h-5 w-5" /></Link>
         </Button>
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full gradient-primary">
             <Bot className="h-4 w-4 text-primary-foreground" />
           </div>
           <div>
-            <div className="text-sm font-medium">EvoWell AI</div>
+            <div className="text-sm font-semibold">EvoWell AI</div>
             <div className="text-xs text-muted-foreground">Your fitness assistant</div>
           </div>
         </div>
@@ -74,9 +88,9 @@ export default function Chat() {
             )}
             <div
               className={cn(
-                "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm",
+                "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
                 msg.role === "user"
-                  ? "bg-primary text-primary-foreground"
+                  ? "gradient-primary text-primary-foreground"
                   : "bg-secondary text-secondary-foreground"
               )}
             >
@@ -84,21 +98,12 @@ export default function Chat() {
             </div>
           </motion.div>
         ))}
-        {isLoading && (
-          <div className="flex gap-2">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent">
-              <Bot className="h-3.5 w-3.5 text-accent-foreground" />
-            </div>
-            <div className="rounded-2xl bg-secondary px-4 py-2.5 text-sm text-muted-foreground">
-              Thinking...
-            </div>
-          </div>
-        )}
+        {isLoading && <TypingIndicator />}
         <div ref={bottomRef} />
       </div>
 
       {/* Input */}
-      <div className="border-t border-border p-4">
+      <div className="glass-strong border-t border-border/50 p-4">
         <form
           onSubmit={(e) => { e.preventDefault(); handleSend(); }}
           className="flex gap-2"
@@ -107,9 +112,9 @@ export default function Chat() {
             placeholder="Ask about workouts, nutrition, or your plan..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            className="flex-1"
+            className="flex-1 rounded-xl"
           />
-          <Button type="submit" size="icon" disabled={!input.trim() || isLoading}>
+          <Button type="submit" size="icon" disabled={!input.trim() || isLoading} className="rounded-xl gradient-primary">
             <Send className="h-4 w-4" />
           </Button>
         </form>

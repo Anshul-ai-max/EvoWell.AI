@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -83,48 +82,20 @@ const supplementOptions = [
 const STEPS = ["Goals", "Level", "Gender", "Body", "Diet", "Cuisine", "Budget", "Supplements", "Split", "Equipment", "Schedule"];
 
 interface FormData {
-  goals: string[];
-  fitnessLevel: string;
-  age: string;
-  height: string;
-  weight: string;
-  gender: string;
-  dietaryPreferences: string;
-  restrictions: string;
-  injuries: string;
-  cuisine: string;
-  customCuisine: string;
-  budget: string;
-  supplementWillingness: string;
-  currentSupplements: string;
-  workoutStyle: string;
-  customWorkoutStyle: string;
-  workoutEnvironment: string;
-  frequency: string;
+  goals: string[]; fitnessLevel: string; age: string; height: string; weight: string; gender: string;
+  dietaryPreferences: string; restrictions: string; injuries: string; cuisine: string; customCuisine: string;
+  budget: string; supplementWillingness: string; currentSupplements: string; workoutStyle: string;
+  customWorkoutStyle: string; workoutEnvironment: string; frequency: string;
 }
 
 export default function Onboarding() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState<FormData>({
-    goals: [],
-    fitnessLevel: "",
-    gender: "",
-    age: "",
-    height: "",
-    weight: "",
-    dietaryPreferences: "",
-    restrictions: "",
-    injuries: "",
-    cuisine: "",
-    customCuisine: "",
-    budget: "",
-    supplementWillingness: "",
-    currentSupplements: "",
-    workoutStyle: "auto",
-    customWorkoutStyle: "",
-    workoutEnvironment: "",
-    frequency: "",
+    goals: [], fitnessLevel: "", gender: "", age: "", height: "", weight: "",
+    dietaryPreferences: "", restrictions: "", injuries: "", cuisine: "", customCuisine: "",
+    budget: "", supplementWillingness: "", currentSupplements: "", workoutStyle: "auto",
+    customWorkoutStyle: "", workoutEnvironment: "", frequency: "",
   });
 
   const progress = ((step + 1) / STEPS.length) * 100;
@@ -132,9 +103,7 @@ export default function Onboarding() {
   const toggleGoal = (id: string) => {
     setFormData((prev) => ({
       ...prev,
-      goals: prev.goals.includes(id)
-        ? prev.goals.filter((g) => g !== id)
-        : [...prev.goals, id],
+      goals: prev.goals.includes(id) ? prev.goals.filter((g) => g !== id) : [...prev.goals, id],
     }));
   };
 
@@ -161,9 +130,7 @@ export default function Onboarding() {
     localStorage.setItem("evowell_onboarding", JSON.stringify(formData));
     setGenerating(true);
     try {
-      const { data: plan, error } = await supabase.functions.invoke('generate-plan', {
-        body: { onboardingData: formData },
-      });
+      const { data: plan, error } = await supabase.functions.invoke('generate-plan', { body: { onboardingData: formData } });
       if (error) throw new Error(error.message || "Failed to generate plan");
       localStorage.setItem("evowell_workout_plan", JSON.stringify(plan.workout));
       localStorage.setItem("evowell_diet_plan", JSON.stringify(plan.diet));
@@ -172,9 +139,7 @@ export default function Onboarding() {
     } catch (e: any) {
       console.error(e);
       toast.error(e.message || "Something went wrong generating your plan");
-    } finally {
-      setGenerating(false);
-    }
+    } finally { setGenerating(false); }
   };
 
   const slideVariants = {
@@ -186,57 +151,48 @@ export default function Onboarding() {
   const [direction, setDirection] = useState(1);
 
   const goNext = () => {
-    if (step === STEPS.length - 1) {
-      handleSubmit();
-    } else {
-      setDirection(1);
-      setStep((s) => s + 1);
-    }
+    if (step === STEPS.length - 1) { handleSubmit(); }
+    else { setDirection(1); setStep((s) => s + 1); }
   };
 
-  const goBack = () => {
-    setDirection(-1);
-    setStep((s) => s - 1);
-  };
+  const goBack = () => { setDirection(-1); setStep((s) => s - 1); };
+
+  const selectedCardClass = "border-primary bg-accent text-accent-foreground ring-1 ring-primary/20";
+  const unselectedCardClass = "border-border bg-card hover:border-primary/40";
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-8">
-      <div className="mb-8 flex items-center gap-2">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
+      {/* Subtle gradient bg */}
+      <div className="fixed inset-0 gradient-hero pointer-events-none" />
+
+      <div className="relative mb-8 flex items-center gap-2.5">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-primary">
           <Dumbbell className="h-5 w-5 text-primary-foreground" />
         </div>
         <h1 className="font-display text-2xl font-bold text-foreground">EvoWell AI</h1>
       </div>
 
-      <div className="w-full max-w-lg">
-        {/* Step indicators */}
-        <div className="mb-2 flex items-center justify-between px-1">
+      <div className="relative w-full max-w-lg">
+        {/* Progress bar only on mobile, step labels on desktop */}
+        <div className="hidden md:flex mb-2 items-center justify-between px-1">
           {STEPS.map((label, i) => (
-            <span
-              key={label}
-              className={cn(
-                "text-xs font-medium",
-                i <= step ? "text-primary" : "text-muted-foreground"
-              )}
-            >
-              {label}
-            </span>
+            <span key={label} className={cn("text-xs font-medium", i <= step ? "text-primary" : "text-muted-foreground")}>{label}</span>
           ))}
         </div>
-        <Progress value={progress} className="mb-8 h-1.5" />
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-2 md:hidden">
+            <span className="text-xs font-medium text-primary">Step {step + 1} of {STEPS.length}</span>
+            <span className="text-xs text-muted-foreground">{STEPS[step]}</span>
+          </div>
+          <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
+            <motion.div className="h-full rounded-full gradient-primary" animate={{ width: `${progress}%` }} transition={{ duration: 0.3 }} />
+          </div>
+        </div>
 
-        <Card className="border-0 shadow-md">
+        <Card className="border-0 shadow-md rounded-2xl">
           <CardContent className="p-6 md:p-8">
             <AnimatePresence mode="wait" custom={direction}>
-              <motion.div
-                key={step}
-                custom={direction}
-                variants={slideVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{ duration: 0.25, ease: "easeOut" }}
-              >
+              <motion.div key={step} custom={direction} variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.25, ease: "easeOut" }}>
                 {step === 0 && (
                   <div>
                     <h2 className="font-display text-xl font-semibold mb-1">What are your fitness goals?</h2>
@@ -245,16 +201,7 @@ export default function Onboarding() {
                       {goals.map((goal) => {
                         const selected = formData.goals.includes(goal.id);
                         return (
-                          <button
-                            key={goal.id}
-                            onClick={() => toggleGoal(goal.id)}
-                            className={cn(
-                              "flex items-center gap-3 rounded-xl border-2 p-4 text-left text-sm font-medium transition-all",
-                              selected
-                                ? "border-primary bg-accent text-accent-foreground"
-                                : "border-border bg-card hover:border-primary/40"
-                            )}
-                          >
+                          <button key={goal.id} onClick={() => toggleGoal(goal.id)} className={cn("flex items-center gap-3 rounded-xl border-2 p-4 text-left text-sm font-medium transition-all", selected ? selectedCardClass : unselectedCardClass)}>
                             <span className="text-lg">{goal.emoji}</span>
                             <span>{goal.label}</span>
                             {selected && <Check className="ml-auto h-4 w-4 text-primary" />}
@@ -273,16 +220,7 @@ export default function Onboarding() {
                       {fitnessLevels.map((level) => {
                         const selected = formData.fitnessLevel === level.id;
                         return (
-                          <button
-                            key={level.id}
-                            onClick={() => setFormData((p) => ({ ...p, fitnessLevel: level.id }))}
-                            className={cn(
-                              "rounded-xl border-2 p-4 text-left transition-all",
-                              selected
-                                ? "border-primary bg-accent"
-                                : "border-border bg-card hover:border-primary/40"
-                            )}
-                          >
+                          <button key={level.id} onClick={() => setFormData((p) => ({ ...p, fitnessLevel: level.id }))} className={cn("rounded-xl border-2 p-4 text-left transition-all", selected ? selectedCardClass : unselectedCardClass)}>
                             <div className="font-medium text-sm">{level.label}</div>
                             <div className="text-xs text-muted-foreground mt-0.5">{level.desc}</div>
                           </button>
@@ -300,16 +238,7 @@ export default function Onboarding() {
                       {genders.map((g) => {
                         const selected = formData.gender === g.id;
                         return (
-                          <button
-                            key={g.id}
-                            onClick={() => setFormData((p) => ({ ...p, gender: g.id }))}
-                            className={cn(
-                              "flex items-center gap-3 rounded-xl border-2 p-4 text-left text-sm font-medium transition-all",
-                              selected
-                                ? "border-primary bg-accent text-accent-foreground"
-                                : "border-border bg-card hover:border-primary/40"
-                            )}
-                          >
+                          <button key={g.id} onClick={() => setFormData((p) => ({ ...p, gender: g.id }))} className={cn("flex items-center gap-3 rounded-xl border-2 p-4 text-left text-sm font-medium transition-all", selected ? selectedCardClass : unselectedCardClass)}>
                             <span className="text-lg">{g.emoji}</span>
                             <span>{g.label}</span>
                             {selected && <Check className="ml-auto h-4 w-4 text-primary" />}
@@ -327,45 +256,21 @@ export default function Onboarding() {
                     <div className="flex flex-col gap-4">
                       <div>
                         <Label htmlFor="age">Age</Label>
-                        <Input
-                          id="age"
-                          type="number"
-                          placeholder="e.g. 28"
-                          value={formData.age}
-                          onChange={(e) => setFormData((p) => ({ ...p, age: e.target.value }))}
-                        />
+                        <Input id="age" type="number" placeholder="e.g. 28" value={formData.age} onChange={(e) => setFormData((p) => ({ ...p, age: e.target.value }))} className="rounded-xl" />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <Label htmlFor="height">Height (cm)</Label>
-                          <Input
-                            id="height"
-                            type="number"
-                            placeholder="e.g. 175"
-                            value={formData.height}
-                            onChange={(e) => setFormData((p) => ({ ...p, height: e.target.value }))}
-                          />
+                          <Input id="height" type="number" placeholder="e.g. 175" value={formData.height} onChange={(e) => setFormData((p) => ({ ...p, height: e.target.value }))} className="rounded-xl" />
                         </div>
                         <div>
                           <Label htmlFor="weight">Weight (kg)</Label>
-                          <Input
-                            id="weight"
-                            type="number"
-                            placeholder="e.g. 75"
-                            value={formData.weight}
-                            onChange={(e) => setFormData((p) => ({ ...p, weight: e.target.value }))}
-                          />
+                          <Input id="weight" type="number" placeholder="e.g. 75" value={formData.weight} onChange={(e) => setFormData((p) => ({ ...p, weight: e.target.value }))} className="rounded-xl" />
                         </div>
                       </div>
                       <div>
                         <Label htmlFor="injuries">Injuries or limitations (optional)</Label>
-                        <Textarea
-                          id="injuries"
-                          placeholder="e.g. Lower back pain, knee surgery in 2023..."
-                          value={formData.injuries}
-                          onChange={(e) => setFormData((p) => ({ ...p, injuries: e.target.value }))}
-                          className="min-h-[60px]"
-                        />
+                        <Textarea id="injuries" placeholder="e.g. Lower back pain, knee surgery in 2023..." value={formData.injuries} onChange={(e) => setFormData((p) => ({ ...p, injuries: e.target.value }))} className="min-h-[60px] rounded-xl" />
                       </div>
                     </div>
                   </div>
@@ -378,22 +283,11 @@ export default function Onboarding() {
                     <div className="flex flex-col gap-4">
                       <div>
                         <Label htmlFor="dietPref">Diet type</Label>
-                        <Input
-                          id="dietPref"
-                          placeholder="e.g. Vegetarian, Keto, No preference..."
-                          value={formData.dietaryPreferences}
-                          onChange={(e) => setFormData((p) => ({ ...p, dietaryPreferences: e.target.value }))}
-                        />
+                        <Input id="dietPref" placeholder="e.g. Vegetarian, Keto, No preference..." value={formData.dietaryPreferences} onChange={(e) => setFormData((p) => ({ ...p, dietaryPreferences: e.target.value }))} className="rounded-xl" />
                       </div>
                       <div>
                         <Label htmlFor="restrictions">Food allergies or restrictions</Label>
-                        <Textarea
-                          id="restrictions"
-                          placeholder="e.g. Lactose intolerant, no shellfish..."
-                          value={formData.restrictions}
-                          onChange={(e) => setFormData((p) => ({ ...p, restrictions: e.target.value }))}
-                          className="min-h-[60px]"
-                        />
+                        <Textarea id="restrictions" placeholder="e.g. Lactose intolerant, no shellfish..." value={formData.restrictions} onChange={(e) => setFormData((p) => ({ ...p, restrictions: e.target.value }))} className="min-h-[60px] rounded-xl" />
                       </div>
                     </div>
                   </div>
@@ -407,16 +301,7 @@ export default function Onboarding() {
                       {cuisines.map((c) => {
                         const selected = formData.cuisine === c.id;
                         return (
-                          <button
-                            key={c.id}
-                            onClick={() => setFormData((p) => ({ ...p, cuisine: c.id }))}
-                            className={cn(
-                              "flex items-center gap-3 rounded-xl border-2 p-4 text-left text-sm font-medium transition-all",
-                              selected
-                                ? "border-primary bg-accent text-accent-foreground"
-                                : "border-border bg-card hover:border-primary/40"
-                            )}
-                          >
+                          <button key={c.id} onClick={() => setFormData((p) => ({ ...p, cuisine: c.id }))} className={cn("flex items-center gap-3 rounded-xl border-2 p-4 text-left text-sm font-medium transition-all", selected ? selectedCardClass : unselectedCardClass)}>
                             <span className="text-lg">{c.emoji}</span>
                             <span>{c.label}</span>
                             {selected && <Check className="ml-auto h-4 w-4 text-primary" />}
@@ -427,12 +312,7 @@ export default function Onboarding() {
                     {formData.cuisine === "custom" && (
                       <div className="mt-4">
                         <Label htmlFor="customCuisine">Describe your preferred cuisine</Label>
-                        <Input
-                          id="customCuisine"
-                          placeholder="e.g. South Indian, Japanese, Nigerian..."
-                          value={formData.customCuisine}
-                          onChange={(e) => setFormData((p) => ({ ...p, customCuisine: e.target.value }))}
-                        />
+                        <Input id="customCuisine" placeholder="e.g. South Indian, Japanese, Nigerian..." value={formData.customCuisine} onChange={(e) => setFormData((p) => ({ ...p, customCuisine: e.target.value }))} className="rounded-xl" />
                       </div>
                     )}
                   </div>
@@ -446,16 +326,7 @@ export default function Onboarding() {
                       {budgetOptions.map((b) => {
                         const selected = formData.budget === b.id;
                         return (
-                          <button
-                            key={b.id}
-                            onClick={() => setFormData((p) => ({ ...p, budget: b.id }))}
-                            className={cn(
-                              "flex items-center gap-3 rounded-xl border-2 p-4 text-left transition-all",
-                              selected
-                                ? "border-primary bg-accent"
-                                : "border-border bg-card hover:border-primary/40"
-                            )}
-                          >
+                          <button key={b.id} onClick={() => setFormData((p) => ({ ...p, budget: b.id }))} className={cn("flex items-center gap-3 rounded-xl border-2 p-4 text-left transition-all", selected ? selectedCardClass : unselectedCardClass)}>
                             <span className="text-lg">{b.emoji}</span>
                             <div>
                               <div className="font-medium text-sm">{b.label}</div>
@@ -477,16 +348,7 @@ export default function Onboarding() {
                       {supplementOptions.map((s) => {
                         const selected = formData.supplementWillingness === s.id;
                         return (
-                          <button
-                            key={s.id}
-                            onClick={() => setFormData((p) => ({ ...p, supplementWillingness: s.id }))}
-                            className={cn(
-                              "rounded-xl border-2 p-4 text-left transition-all",
-                              selected
-                                ? "border-primary bg-accent"
-                                : "border-border bg-card hover:border-primary/40"
-                            )}
-                          >
+                          <button key={s.id} onClick={() => setFormData((p) => ({ ...p, supplementWillingness: s.id }))} className={cn("rounded-xl border-2 p-4 text-left transition-all", selected ? selectedCardClass : unselectedCardClass)}>
                             <div className="font-medium text-sm">{s.label}</div>
                             <div className="text-xs text-muted-foreground mt-0.5">{s.desc}</div>
                           </button>
@@ -496,12 +358,7 @@ export default function Onboarding() {
                     {formData.supplementWillingness !== "none" && (
                       <div className="mt-4">
                         <Label htmlFor="currentSupps">Supplements you already use (optional)</Label>
-                        <Input
-                          id="currentSupps"
-                          placeholder="e.g. Whey protein, creatine, multivitamin..."
-                          value={formData.currentSupplements}
-                          onChange={(e) => setFormData((p) => ({ ...p, currentSupplements: e.target.value }))}
-                        />
+                        <Input id="currentSupps" placeholder="e.g. Whey protein, creatine, multivitamin..." value={formData.currentSupplements} onChange={(e) => setFormData((p) => ({ ...p, currentSupplements: e.target.value }))} className="rounded-xl" />
                       </div>
                     )}
                   </div>
@@ -515,16 +372,7 @@ export default function Onboarding() {
                       {workoutStyles.map((ws) => {
                         const selected = formData.workoutStyle === ws.id;
                         return (
-                          <button
-                            key={ws.id}
-                            onClick={() => setFormData((p) => ({ ...p, workoutStyle: ws.id }))}
-                            className={cn(
-                              "flex items-center gap-3 rounded-xl border-2 p-4 text-left transition-all",
-                              selected
-                                ? "border-primary bg-accent"
-                                : "border-border bg-card hover:border-primary/40"
-                            )}
-                          >
+                          <button key={ws.id} onClick={() => setFormData((p) => ({ ...p, workoutStyle: ws.id }))} className={cn("flex items-center gap-3 rounded-xl border-2 p-4 text-left transition-all", selected ? selectedCardClass : unselectedCardClass)}>
                             <span className="text-lg">{ws.emoji}</span>
                             <div>
                               <div className="font-medium text-sm">{ws.label}</div>
@@ -538,13 +386,7 @@ export default function Onboarding() {
                     {formData.workoutStyle === "custom" && (
                       <div className="mt-4">
                         <Label htmlFor="customSplit">Describe your custom split</Label>
-                        <Textarea
-                          id="customSplit"
-                          placeholder="e.g. Day 1: Chest+Triceps, Day 2: Back+Biceps, Day 3: Legs+Shoulders..."
-                          value={formData.customWorkoutStyle}
-                          onChange={(e) => setFormData((p) => ({ ...p, customWorkoutStyle: e.target.value }))}
-                          className="min-h-[80px]"
-                        />
+                        <Textarea id="customSplit" placeholder="e.g. Day 1: Chest+Triceps, Day 2: Back+Biceps..." value={formData.customWorkoutStyle} onChange={(e) => setFormData((p) => ({ ...p, customWorkoutStyle: e.target.value }))} className="min-h-[80px] rounded-xl" />
                       </div>
                     )}
                   </div>
@@ -558,16 +400,7 @@ export default function Onboarding() {
                       {workoutEnvironments.map((env) => {
                         const selected = formData.workoutEnvironment === env.id;
                         return (
-                          <button
-                            key={env.id}
-                            onClick={() => setFormData((p) => ({ ...p, workoutEnvironment: env.id }))}
-                            className={cn(
-                              "rounded-xl border-2 p-4 text-left transition-all",
-                              selected
-                                ? "border-primary bg-accent"
-                                : "border-border bg-card hover:border-primary/40"
-                            )}
-                          >
+                          <button key={env.id} onClick={() => setFormData((p) => ({ ...p, workoutEnvironment: env.id }))} className={cn("rounded-xl border-2 p-4 text-left transition-all", selected ? selectedCardClass : unselectedCardClass)}>
                             <div className="font-medium text-sm">{env.label}</div>
                             <div className="text-xs text-muted-foreground mt-0.5">{env.desc}</div>
                           </button>
@@ -585,16 +418,7 @@ export default function Onboarding() {
                       {frequencies.map((f) => {
                         const selected = formData.frequency === f.id;
                         return (
-                          <button
-                            key={f.id}
-                            onClick={() => setFormData((p) => ({ ...p, frequency: f.id }))}
-                            className={cn(
-                              "rounded-xl border-2 p-4 text-left text-sm font-medium transition-all",
-                              selected
-                                ? "border-primary bg-accent text-accent-foreground"
-                                : "border-border bg-card hover:border-primary/40"
-                            )}
-                          >
+                          <button key={f.id} onClick={() => setFormData((p) => ({ ...p, frequency: f.id }))} className={cn("rounded-xl border-2 p-4 text-left text-sm font-medium transition-all", selected ? selectedCardClass : unselectedCardClass)}>
                             {f.label}
                           </button>
                         );
@@ -606,31 +430,16 @@ export default function Onboarding() {
             </AnimatePresence>
 
             <div className="mt-8 flex items-center justify-between">
-              <Button
-                variant="ghost"
-                onClick={goBack}
-                disabled={step === 0}
-                className="gap-1"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back
+              <Button variant="ghost" onClick={goBack} disabled={step === 0} className="gap-1 rounded-xl">
+                <ArrowLeft className="h-4 w-4" /> Back
               </Button>
-              <Button onClick={goNext} disabled={!canProceed() || generating} className="gap-1">
+              <Button onClick={goNext} disabled={!canProceed() || generating} className="gap-1 rounded-xl gradient-primary">
                 {generating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Generating…
-                  </>
+                  <><Loader2 className="h-4 w-4 animate-spin" />Generating…</>
                 ) : step === STEPS.length - 1 ? (
-                  <>
-                    Generate My Plan
-                    <ArrowRight className="h-4 w-4" />
-                  </>
+                  <>Generate My Plan <ArrowRight className="h-4 w-4" /></>
                 ) : (
-                  <>
-                    Next
-                    <ArrowRight className="h-4 w-4" />
-                  </>
+                  <>Next <ArrowRight className="h-4 w-4" /></>
                 )}
               </Button>
             </div>
