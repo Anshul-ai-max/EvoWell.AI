@@ -8,7 +8,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
 const fadeIn = {
   initial: { opacity: 0, y: 12 },
@@ -63,10 +62,21 @@ export default function Dashboard() {
     if (!onboarding) { toast.error("No onboarding data. Complete onboarding first."); return; }
     setRegenerating(true);
     try {
-      const { data: plan, error } = await supabase.functions.invoke('generate-plan', {
-        body: { onboardingData: onboarding },
+      const response = await fetch("/api/generate-plan", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ onboardingData: onboarding }),
       });
-      if (error) throw new Error(error.message || "Failed to generate plan");
+
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => ({}));
+        const message = (errorBody && (errorBody.error || errorBody.message)) || "Failed to generate plan";
+        throw new Error(message);
+      }
+
+      const plan = await response.json();
       localStorage.setItem("evowell_workout_plan", JSON.stringify(plan.workout));
       localStorage.setItem("evowell_diet_plan", JSON.stringify(plan.diet));
       loadData();
