@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Send, Bot } from "lucide-react";
+import { ArrowLeft, Send, Bot, MessageSquareText } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,9 +55,11 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div className="relative flex h-screen flex-col overflow-hidden bg-background">
+      <div className="pointer-events-none absolute -left-20 top-16 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
+      <div className="pointer-events-none absolute -right-20 bottom-20 h-64 w-64 rounded-full bg-info/10 blur-3xl" />
       {/* Header */}
-      <header className="flex items-center gap-3 glass-strong px-4 py-3">
+      <header className="relative z-10 flex items-center gap-3 glass-strong px-4 py-3">
         <Button variant="ghost" size="icon" asChild className="rounded-xl">
           <Link to="/dashboard"><ArrowLeft className="h-5 w-5" /></Link>
         </Button>
@@ -73,7 +75,7 @@ export default function Chat() {
       </header>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="relative z-10 flex-1 space-y-4 overflow-y-auto p-4">
         {messages.map((msg, i) => (
           <motion.div
             key={i}
@@ -103,20 +105,29 @@ export default function Chat() {
       </div>
 
       {/* Input */}
-      <div className="glass-strong border-t border-border/50 p-4">
+      <div className="relative z-10 border-t border-border/50 glass-strong p-4">
         <form
           onSubmit={(e) => { e.preventDefault(); handleSend(); }}
-          className="flex gap-2"
+          className="rounded-2xl border border-border/70 bg-card/80 p-3 shadow-sm backdrop-blur-sm"
         >
-          <Input
-            placeholder="Ask about workouts, nutrition, or your plan..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            className="flex-1 rounded-xl"
-          />
-          <Button type="submit" size="icon" disabled={!input.trim() || isLoading} className="rounded-xl gradient-primary">
-            <Send className="h-4 w-4" />
-          </Button>
+          <label htmlFor="chatInput" className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Message
+          </label>
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <MessageSquareText className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="chatInput"
+                placeholder="Ask about workouts, nutrition, or your plan..."
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                className="h-11 pl-10"
+              />
+            </div>
+            <Button type="submit" size="icon" disabled={!input.trim() || isLoading} className="h-11 w-11 rounded-xl gradient-primary shadow-md transition-transform duration-200 hover:-translate-y-0.5">
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
         </form>
       </div>
     </div>

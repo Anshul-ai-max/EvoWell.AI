@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { UtensilsCrossed, Info, Pill, Sunrise, Sun, Moon, Cookie, ChevronDown, Flame, Beef, Wheat, Droplets, Pencil, Loader2 } from "lucide-react";
+import { UtensilsCrossed, Info, Pill, Sunrise, Sun, Moon, Cookie, ChevronDown, Flame, Beef, Wheat, Droplets, Pencil, Loader2, WandSparkles } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -291,14 +291,20 @@ export default function Diet() {
       </motion.div>
 
       <Sheet open={customizeOpen} onOpenChange={setCustomizeOpen}>
-        <SheetContent side="bottom" className="rounded-t-2xl">
+        <SheetContent side="bottom" className="rounded-t-3xl border-t border-border/60 bg-card/95 backdrop-blur-md">
           <SheetHeader>
             <SheetTitle className="font-display">Customize Your Diet</SheetTitle>
             <SheetDescription>Describe what you want to change — e.g. "I can't eat soya or sprouts"</SheetDescription>
           </SheetHeader>
-          <div className="mt-4 space-y-4">
-            <Textarea placeholder="e.g. Replace paneer with tofu, I'm lactose intolerant..." value={customizeText} onChange={(e) => setCustomizeText(e.target.value)} className="min-h-[100px] rounded-xl" />
-            <Button onClick={handleCustomize} disabled={!customizeText.trim() || customizing} className="w-full gap-2 rounded-xl gradient-primary">
+          <div className="mt-4 space-y-4 rounded-2xl border border-border/70 bg-muted/20 p-4">
+            <label htmlFor="dietCustomize" className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Diet change request
+            </label>
+            <div className="relative">
+              <WandSparkles className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
+              <Textarea id="dietCustomize" placeholder="e.g. Replace paneer with tofu, I'm lactose intolerant..." value={customizeText} onChange={(e) => setCustomizeText(e.target.value)} className="min-h-[120px] pl-10" />
+            </div>
+            <Button onClick={handleCustomize} disabled={!customizeText.trim() || customizing} className="w-full gap-2 rounded-xl gradient-primary shadow-md transition-transform duration-200 hover:-translate-y-0.5">
               {customizing ? (<><Loader2 className="h-4 w-4 animate-spin" />Regenerating…</>) : (<><Pencil className="h-4 w-4" />Apply Changes</>)}
             </Button>
           </div>

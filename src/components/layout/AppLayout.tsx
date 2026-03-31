@@ -32,7 +32,7 @@ export default function AppLayout() {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-primary">
               <Dumbbell className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="font-display text-xl font-bold text-foreground">EvoWell</span>
+            <span className="font-display text-xl font-bold text-foreground">EvoWell AI</span>
           </Link>
 
           <nav className="flex flex-1 flex-col gap-1">
@@ -74,7 +74,7 @@ export default function AppLayout() {
               <div className="flex h-8 w-8 items-center justify-center rounded-xl gradient-primary">
                 <Dumbbell className="h-4 w-4 text-primary-foreground" />
               </div>
-              <span className="font-display text-lg font-bold">EvoWell</span>
+              <span className="font-display text-lg font-bold">EvoWell AI</span>
             </Link>
           </header>
         )}
