@@ -130,12 +130,28 @@ export default function Onboarding() {
     localStorage.setItem("evowell_onboarding", JSON.stringify(formData));
     setGenerating(true);
     try {
-      const { data: plan, error } = await supabase.functions.invoke('generate-plan', { body: { onboardingData: formData } });
-      if (error) throw new Error(error.message || "Failed to generate plan");
-      localStorage.setItem("evowell_workout_plan", JSON.stringify(plan.workout));
-      localStorage.setItem("evowell_diet_plan", JSON.stringify(plan.diet));
-      localStorage.setItem("evowell_onboarded", "true");
-      navigate("/dashboard");
+      const res = await fetch('/api/generate-plan', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      })
+      
+      if (!res.ok) {
+        throw new Error("API failed")
+      }
+      
+      const data = await res.json()
+      
+      const planText = data.result || "No plan generated"
+      
+      console.log(planText)
+      
+      localStorage.setItem("evowell_plan", planText)
+      localStorage.setItem("evowell_onboarded", "true")
+      
+      navigate('/dashboard')
     } catch (e: any) {
       console.error(e);
       toast.error(e.message || "Something went wrong generating your plan");
